@@ -33,7 +33,7 @@ export class Entity {
     return key in this.fields || key in this.derivedFields
   }
 
-  validate () {
+  validate (): FieldError[] {
     const errors = []
     for (const field in this.fields) {
       for (const error of this._validateField(field)) {

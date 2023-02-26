@@ -32,12 +32,12 @@ export class Entities {
     return key in this.index
   }
 
-  validate () {
-    const errors = []
+  validate (): WorkError[] {
+    const errors: WorkError[] = []
     for (const entity of this.entities) {
       for (const { field, error } of entity.validate()) {
         errors.push({
-          entity: entity.get(this.indexField),
+          entity: (entity.get(this.indexField) || '[missing]') as string,
           field,
           error
         })
