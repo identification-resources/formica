@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "SDK for data from the Library of Identification Resources",
   "main": "lib/index.js",
+  "bin": {
+    "loir-validate-catalog": "./lib/bin/validate-catalog.js"
+  },
   "scripts": {
     "build": "tsc"
   },
