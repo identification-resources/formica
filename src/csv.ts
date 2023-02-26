@@ -1,6 +1,3 @@
-import { Entities } from './entities'
-import { Entity } from './entity'
-
 export function parseCsv (file: string) {
   const values = file
     .trim()
@@ -21,15 +18,10 @@ export function parseCsv (file: string) {
   }, [[]])
 }
 
-export function formatCsv (entities: Entities | Entity[]) {
-  return Array.from(entities)
-    .map((entity: Entity) => {
-      return Object.keys(entity.fields)
-        .map(field => {
-          let value = entity.get(field) || ''
-          if (Array.isArray(value)) {
-            value = value.join('; ')
-          }
+export function formatCsv (table: string[][]) {
+  return table
+    .map((row: string[]) => {
+      return row.map(value => {
           if (/["\n,]/.test(value)) {
             return `"${value.replace(/"/, '"""')}"`
           } else {

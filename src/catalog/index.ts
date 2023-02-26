@@ -1,7 +1,7 @@
 import { Entities } from './entities'
 import { Entity } from './entity'
 import { TYPE_INFO } from './tables/index'
-import { parseCsv } from './csv'
+import { parseCsv } from '../csv'
 
 function getTypeInfo (type: string): [typeof Entity, string] {
   switch (type) {

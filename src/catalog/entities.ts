@@ -45,4 +45,18 @@ export class Entities {
     }
     return errors
   }
+
+  toTable (): string[][] {
+    if (this.entities.length === 0) {
+      return [[]]
+    }
+    const header = Object.keys(this.entities[0].fields)
+    const table = this.entities.map((entity: Entity) => {
+      return header.map((field: string): string => {
+        const value = entity.get(field) || ''
+        return Array.isArray(value) ? value.join('; ') : value
+      })
+    })
+    return [header, ...table]
+  }
 }
