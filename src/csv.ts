@@ -1,4 +1,4 @@
-export function parseCsv (file: string) {
+export function parseCsv (file: string): string[][] {
   const values = file
     .trim()
     .match(/("([^"]|"")*?"|[^,\n]+|(?!$))(,|\n|$)/g)
@@ -18,17 +18,17 @@ export function parseCsv (file: string) {
   }, [[]])
 }
 
-export function formatCsv (table: string[][]) {
+export function formatCsv (table: string[][], delimiter: string = ',') {
   return table
     .map((row: string[]) => {
       return row.map(value => {
-          if (/["\n,]/.test(value)) {
+          if (/["\n]/.test(value) || value.includes(delimiter)) {
             return `"${value.replace(/"/, '"""')}"`
           } else {
             return value
           }
         })
-        .join(',')
+        .join(delimiter)
     })
-    .join('\n')
+    .join('\n') + '\n'
 }
