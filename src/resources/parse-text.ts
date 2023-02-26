@@ -164,6 +164,11 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
         item.taxonomicStatus = 'accepted'
     }
 
+    // Clusters
+    if (/^\[(_|\d+)\] /.test(name)) {
+        name = name.replace(/^\[(_|\d+)\] /, '')
+    }
+
     // Parent context is used for parsing and formatting binomial names.
     const parentContext = { ...parent }
     if (parent.incorrect) { parentContext.incorrect = { ...parent.incorrect } }
