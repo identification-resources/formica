@@ -127,7 +127,7 @@ function isUpperCase (name: string): boolean {
 }
 
 function getSynonymRank (name: string, rank: Rank): Rank {
-    const BINAME_PATTERN = /^([A-Z]\S+ (\([A-Z]\S+\) )?)?[a-z0-9-]+/
+    const BINAME_PATTERN = /^([A-Z]\S+ (\([A-Z]\S+\) )?)?[a-z0-9-]+( |$)/
     if (!BINAME_PATTERN.test(name)) {
         return rank
     }
@@ -198,7 +198,9 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
         const parseContext = parentContext.incorrect || parentContext
         if (!parseContext.genus) { parseContext.genus = name.split(' ', 1)[0] }
         const genusPrefix = new RegExp(`^${parentContext.genus} (\\(.*?\\) )?`, 'i')
-        name = name.replace(genusPrefix, '')
+        if (name[0] === (parentContext.genus as string)[0]) {
+            name = name.replace(genusPrefix, '')
+        }
 
         if (compareRanks('species', rank) < 0) {
             const speciesPrefix = parseContext.specificEpithet + ' '
@@ -218,6 +220,10 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     item.scientificNameAuthorship = capitalizeAuthors(citation)
     item.taxonRemarks = notes
     item.taxonRank = rank
+
+    if (/[^\p{L}0-9\- ]/u.test(taxon) && !INDET_SUFFIXES.has(taxon)) {
+        throw new Error(`Taxon name contains unexpected characters: "${taxon}"`)
+    }
 
     // Validate names and recompose binomial and trinomial names
     if (compareRanks('group', rank) > 0) {
