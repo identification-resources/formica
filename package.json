@@ -1,0 +1,27 @@
+{
+  "name": "@larsgw/identification-resources-sdk",
+  "version": "0.0.0",
+  "description": "SDK for data from the Library of Identification Resources",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/identification-resources/sdk-js.git"
+  },
+  "author": "Lars Willighagen (https://larsgw.github.io/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/identification-resources/sdk-js/issues"
+  },
+  "homepage": "https://github.com/identification-resources/sdk-js#readme",
+  "dependencies": {
+    "ietf-language-tag-regex": "^0.0.5",
+    "spdx-license-list": "^6.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.14.1",
+    "typescript": "^4.9.5"
+  }
+}
