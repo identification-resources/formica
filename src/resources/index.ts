@@ -1,1 +1,4 @@
-export { parseFile as parseTextFile } from './parse-text'
+export {
+    parseFile as parseTextFile,
+    parseFileHeader as parseTextFileHeader
+} from './parse-text'
