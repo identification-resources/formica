@@ -129,7 +129,7 @@ function isUpperCase (name: string): boolean {
 }
 
 function getSynonymRank (name: string, rank: Rank): Rank {
-    const BINAME_PATTERN = /^([A-Z]\S+ (\([A-Z]\S+\) )?)?[a-z0-9-]+(?= |$)/
+    const BINAME_PATTERN = /^([A-Z]\S+ (\([A-Z]\S+\) )?)?(x )?[a-z0-9-]+(?= |$)/
     if (!BINAME_PATTERN.test(name)) {
         return rank
     }
@@ -217,6 +217,11 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
         }
     }
 
+    // Hybrids
+    if (rank === 'species' && /^x /.test(name)) {
+        name = '\u00D7' + name.slice(2)
+    }
+
     // Divide the name into the main scientific name (only the epithet for taxa
     // lower than genus), the authorship information, and optionally remarks
     const nameParts = name.match(NAME_PATTERN)
@@ -228,7 +233,7 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     item.taxonRemarks = notes
     item.taxonRank = rank
 
-    if (/[^\p{L}0-9\- ]/u.test(taxon) && !INDET_SUFFIXES.has(taxon)) {
+    if (/[^\p{L}0-9\u{00D7}\- ]/u.test(taxon) && !INDET_SUFFIXES.has(taxon)) {
         throw new Error(`Taxon name contains unexpected characters: "${taxon}"`)
     }
 
