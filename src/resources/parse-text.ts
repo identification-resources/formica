@@ -1,4 +1,5 @@
 import * as yaml from 'js-yaml'
+import { createDiff, ResourceDiffType } from './diff-resource'
 
 const RANKS: Rank[] = [
     'class',
@@ -80,8 +81,8 @@ const NAME_PATTERN = new RegExp(
         '(\\S+)' +
         // $2 optional author citation
         '(?: ' +
-            // but not auct(t).
-            '(?!auctt?\.|(?:syn|comb|sp|spec)\. n(?:ov)?\.)' +
+            // but not auct(t)., etc.
+            '(?!auctt?\.|(?:syn|comb|sp|spec)\. n(?:ov)?\.|s(ens[.u]|\.))' +
         '(' +
             // $2.1 anything in parentheses
             '\\(.+?\\)' +
@@ -96,11 +97,12 @@ const NAME_PATTERN = new RegExp(
             '\\S+ [yY] \\S+' +
         '|' +
             // $2.5 name( in name)
-            '\\S+(?: in \\S+)?' +
+            '\\p{Lu}\\S*(?: in \\S+)?' +
         '))?' +
         // $3 optional notes
         '(?:,? (.+))?' +
-    '$'
+    '$',
+    'u'
 )
 
 /**
@@ -127,7 +129,7 @@ function isUpperCase (name: string): boolean {
 }
 
 function getSynonymRank (name: string, rank: Rank): Rank {
-    const BINAME_PATTERN = /^([A-Z]\S+ (\([A-Z]\S+\) )?)?[a-z0-9-]+( |$)/
+    const BINAME_PATTERN = /^([A-Z]\S+ (\([A-Z]\S+\) )?)?[a-z0-9-]+(?= |$)/
     if (!BINAME_PATTERN.test(name)) {
         return rank
     }
@@ -355,38 +357,47 @@ function parseHeader (header: string): ResourceMetadata {
     return metadata
 }
 
-function validateResource (content: string, config: ResourceMetadata): void {
-}
-
-function parseResource (resource: string, workId: WorkId, resourceIndex: number): Resource {
-    const idBase = `${workId}:${resourceIndex}:`
-    const [header, content] = resource.split(/\n---\n+/)
+function parseResource (resource: string): [ResourceMetadata, string] {
+    const [header, _, ...rest] = resource.split(/(\n---\n+)/)
     const config = parseHeader(header)
+    const content = rest.join('')
 
     // Check for too much indentation
     const longerIndent = new RegExp(`^(  ){${config.levels.length - 1}}(?!  [+=>] ) `, 'm')
     const longerIndentMatch = content.match(longerIndent)
     if (longerIndentMatch !== null) {
-      const offset = longerIndentMatch.index
-      const line = (content.slice(0, offset).match(/\n/g) || []).length + 1
-      throw new SyntaxError(`Too much indentation at ${line}:0
+        const offset = longerIndentMatch.index
+        const line = (content.slice(0, offset).match(/\n/g) || []).length + 1
+        throw new SyntaxError(`Too much indentation at ${line}:0
 ${content.slice(offset).split('\n', 1)}
 ^`)
     }
 
-    const data: Record<TaxonId, WorkingTaxon> = {}
+    return [config, content]
+}
+
+function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds: number[]): Resource {
+    const idBase = `${resource.id}:`
+
+    const data = resource.taxa as Record<TaxonId, WorkingTaxon>
     let id = 0
     let parents: Array<TaxonId | null> = []
     let groupIndent = 0
+    let previousId = ''
+    let newIdOffset = Math.max(...oldIds)
 
-    for (const line of content.trim().split('\n')) {
+    for (const { text: line, type } of content) {
+        if (type === ResourceDiffType.Deleted) {
+            id++
+            continue
+        }
+
         const lineIndent = (line.match(/^ */) as string[])[0].length
 
         if (lineIndent > groupIndent) {
             // Do not count synonyms as parents
-            // (id here is still the parent id)
-            if (data[idBase + id].taxonomicStatus === 'accepted') {
-                parents.push(idBase + id)
+            if (data[previousId] && data[previousId].taxonomicStatus === 'accepted') {
+                parents.push(previousId)
             } else {
                 parents.push(null)
             }
@@ -404,11 +415,11 @@ ${content.slice(offset).split('\n', 1)}
             groupIndent = lineIndent
         }
 
-        const parentId = parents.reduce((parent, id) => id || parent, null)
+        const parentId = parents.reduce((grandparent, parent) => parent || grandparent, null)
         const parent = parentId === null ? {} as WorkingTaxon : data[parentId]
 
         const name = line.slice(groupIndent)
-        const rank = config.levels[groupIndent / 2]
+        const rank = resource.metadata.levels[groupIndent / 2]
         const item = parseName(name, rank, parent)
         const isSynonym = item.taxonomicStatus !== 'accepted'
         const isIndet = Array.from(INDET_SUFFIXES).some(suffix => name.endsWith(' ' + suffix))
@@ -417,7 +428,15 @@ ${content.slice(offset).split('\n', 1)}
             continue
         }
 
-        item.scientificNameID = idBase + (++id).toString()
+        if (type === ResourceDiffType.Added) {
+            newIdOffset++
+            item.scientificNameID = idBase + newIdOffset.toString()
+        } else {
+            id++
+            item.scientificNameID = idBase + (oldIds[id - 1] || id).toString()
+        }
+        previousId = item.scientificNameID
+
         item.parentNameUsageID = isSynonym ? undefined : parent.scientificNameID
         item.parentNameUsage = isSynonym ? undefined : parent.scientificName
         item.acceptedNameUsageID = isSynonym ? parent.scientificNameID : undefined
@@ -455,17 +474,45 @@ ${content.slice(offset).split('\n', 1)}
         data[item.scientificNameID] = item
     }
 
-    return {
-        id: `${workId}:${resourceIndex}`,
-        file: `${workId}-${resourceIndex}`,
-        workId,
-        metadata: config,
-        taxa: data as Record<TaxonId, Taxon>
-    }
+    return resource
 }
 
-export function parseFile (file: string, id: WorkId): Resource[] {
-    return file
-        .split('\n\n===\n\n')
-        .map((resource, index) => parseResource(resource, id, index + 1))
+function splitResources (file: string): string[] {
+    return file.split('\n\n===\n\n')
+}
+
+export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Resource[] {
+    const oldResources = old ? splitResources(old.txt) : []
+    return splitResources(file).map((resource, index) => {
+        const [config, content] = parseResource(resource)
+        const template: Resource = {
+            id: `${id}:${index + 1}`,
+            file: `${id}-${index + 1}`,
+            workId: id,
+            metadata: config,
+            taxa: {}
+        }
+
+        const oldResource = oldResources[index] || resource
+
+        let diff
+        if (oldResources[index]) {
+            diff = createDiff(content, parseResource(oldResources[index])[1])
+        } else {
+            diff = createDiff(content, content)
+        }
+
+        const oldIds = []
+        if (old) {
+            for (const row of old.dwc[index].slice(1)) {
+                oldIds.push(parseInt(row[0].split(':')[2]))
+            }
+        }
+
+        return parseResourceContent(diff, template, oldIds)
+    })
+}
+
+export function parseFileHeader (file: string): ResourceMetadata[] {
+    return splitResources(file).map(resource => parseResource(resource)[0])
 }

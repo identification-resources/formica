@@ -82,3 +82,24 @@ interface Resource {
   metadata: ResourceMetadata,
   taxa: Record<TaxonId, Taxon>
 }
+
+interface ResourceHistory {
+    txt: string,
+    dwc: Array<string[][]>
+}
+
+type ResourceDiff = ResourceDiffPart[]
+
+interface ResourceDiffPart {
+    text: string,
+    type: ResourceDiffType
+}
+
+type ResourceDiffTokenizer = (text: string) => string[]
+
+declare enum ResourceDiffType {
+    Added = '+',
+    Deleted = '-',
+    Modified = '~',
+    Unchanged = '='
+}
