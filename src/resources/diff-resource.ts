@@ -115,11 +115,13 @@ export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenize
                 continue
             }
 
+            // If there is a new newline, there is a new... line. If the current
+            // line is not seen as new, the next one should be marked as new.
             if (nextLineNew) {
                 line.type = ResourceDiffType.Added
                 nextLineNew = false
             }
-            if (change.type === ResourceDiffType.Added) {
+            if (change.type === ResourceDiffType.Added && line.type !== ResourceDiffType.Added) {
                 nextLineNew = true
             }
 
