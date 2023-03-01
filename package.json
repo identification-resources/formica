@@ -1,25 +1,31 @@
 {
-  "name": "@larsgw/identification-resources-sdk",
+  "name": "@larsgw/formica",
   "version": "0.0.0",
-  "description": "SDK for data from the Library of Identification Resources",
+  "description": "SDK and tools for data from the Library of Identification Resources",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "bin": {
-    "loir-validate-catalog": "./lib/bin/validate-catalog.js"
+    "loir-validate-catalog": "./lib/bin/validate-catalog.js",
+    "loir-validate-resources": "./lib/bin/validate-resources-text.js",
+    "loir-resources-process": "./lib/bin/process-resources.js",
+    "loir-resources-index": "./lib/bin/process-resources-index.js"
   },
   "scripts": {
     "lint": "eslint src",
-    "build": "tsc"
+    "build": "tsc -d",
+    "preversion": "npm run lint",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/identification-resources/sdk-js.git"
+    "url": "git+https://github.com/identification-resources/formica.git"
   },
   "author": "Lars Willighagen (https://larsgw.github.io/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/identification-resources/sdk-js/issues"
+    "url": "https://github.com/identification-resources/formica/issues"
   },
-  "homepage": "https://github.com/identification-resources/sdk-js#readme",
+  "homepage": "https://github.com/identification-resources/formica#readme",
   "dependencies": {
     "ietf-language-tag-regex": "^0.0.5",
     "js-yaml": "^4.1.0",
