@@ -46,29 +46,28 @@ export function prompt (question: string): Promise<string> {
  * Create a CLI prompt and only accept certain answers.
  */
 export async function promptForAnswers (question: string, answers: string[]) {
-    while (true) {
-        const answer = (await prompt(question))[0]
-        if (answers.includes(answer)) {
-            return answer
-        }
-    }
+    let answer
+
+    do {
+        answer = (await prompt(question))[0]
+    } while (!answers.includes(answer))
+
+    return answer
 }
 
 /**
  * Run a command and return stdout.
  */
-export function runCommand (command: string, args: string[], options?: Object): Promise<string> {
+export function runCommand (command: string, args: string[], options?: Record<string, unknown>): Promise<string> {
     return new Promise((resolve, reject) => {
         const proc = spawn(command, args, options)
         let stdout = ''
-        let stderr = ''
         proc.stdout.on('data', data => { stdout += data })
-        proc.stderr.pipe(process.stdout)
         proc.on('close', code => {
             if (code === 0) {
                 resolve(stdout)
             } else {
-                reject(new Error(stderr))
+                reject()
             }
         })
     })

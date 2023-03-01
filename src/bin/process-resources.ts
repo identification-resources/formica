@@ -1,4 +1,4 @@
-import { promises as fs, existsSync } from 'fs'
+import { promises as fs } from 'fs'
 import * as path from 'path'
 import { spawn } from 'child_process'
 import * as util from 'util'
@@ -7,12 +7,12 @@ import { csv } from '../index'
 import { prompt, promptForAnswers, numericSort, runCommand } from './util'
 
 interface AmendedTaxon extends Taxon {
-  colTaxonID?: string,
-  gbifTaxonID?: string
+    colTaxonID?: string,
+    gbifTaxonID?: string
 }
 
 interface AmendedResource extends Resource {
-  taxa: Record<TaxonId, AmendedTaxon>
+    taxa: Record<TaxonId, AmendedTaxon>
 }
 
 type Classifications = Record<string, Array<[AmendedTaxon, string]>>
@@ -84,7 +84,6 @@ function runGnverifier (names: string): Promise<string> {
     return new Promise((resolve, reject) => {
         const proc = spawn('gnverifier', ['-s', '1,11', '-M'])
         let stdout = ''
-        let stderr = ''
         proc.stdout.on('data', data => { stdout += data })
         proc.stderr.pipe(process.stdout)
         proc.on('close', code => {
@@ -155,13 +154,13 @@ class ResourceProcessor {
     async processWork (id: WorkId, update?: boolean): Promise<void> {
         const resources = await this.processResources(id, update)
 
-        await Promise.all(resources.map((resource, index) => {
+        await Promise.all(resources.map(resource => {
             const header = DWC_FIELDS
             const table = [header]
 
             for (const id in resource.taxa) {
-                const taxon = resource.taxa[id] as { [index: string]: any }
-                table.push(header.map(column => typeof taxon[column] === 'string' ? taxon[column] : ''))
+                const taxon = resource.taxa[id] as unknown as Record<string, string | undefined>
+                table.push(header.map(column => taxon[column] || ''))
             }
 
             return fs.writeFile(path.join(this.DIR_DWC, `${resource.file}.csv`), csv.formatCsv(table, ',').trim())
@@ -305,7 +304,7 @@ class ResourceProcessor {
     async checkPrefix (resource: AmendedResource, classifications: Classifications, source: string): Promise<void> {
         const lists = classifications[source]
         if (!lists.length) { return }
-        let prefix = lists[0][1].split('|')
+        const prefix = lists[0][1].split('|')
 
         for (const [taxon, list] of lists.slice(1)) {
             const parts = list.split('|')
@@ -377,7 +376,7 @@ class ResourceProcessor {
 
     async shouldBeSkipped (id: ResourceId): Promise<boolean> {
         const problems = csv.parseCsv(await fs.readFile(this.FILE_PROBLEMS, 'utf8'))
-        return problems.some(([work, resource, problem]) => resource === id)
+        return problems.some(([_work, resource, _problem]) => resource === id)
     }
 }
 

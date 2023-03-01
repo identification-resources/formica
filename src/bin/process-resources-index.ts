@@ -1,6 +1,5 @@
 import { promises as fs, existsSync as fileExists } from 'fs'
 import * as path from 'path'
-import * as yaml from 'js-yaml'
 
 import { csv, resources } from '../index'
 import { numericSort } from './util'
@@ -10,6 +9,7 @@ interface AmendedResourceMetadata extends ResourceMetadata {
     taxonCount: number
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function sortObject (object: Record<string, any>): Record<string, any> {
     const sorted: Record<string, any> = {}
     for (const key of Object.keys(object).sort(numericSort)) {
@@ -17,6 +17,7 @@ function sortObject (object: Record<string, any>): Record<string, any> {
     }
     return sorted
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 async function main (args: string[]): Promise<void> {
     const REPO_ROOT = path.resolve(args[0])
@@ -43,7 +44,7 @@ async function main (args: string[]): Promise<void> {
                 return
             }
 
-            const [header, ...dwc] = csv.parseCsv(await fs.readFile(dwcFile, 'utf-8'))
+            const [_header, ...dwc] = csv.parseCsv(await fs.readFile(dwcFile, 'utf-8'))
             for (const taxon of dwc) {
                 const gbifId = taxon[25]
                 if (gbifId) {
@@ -67,6 +68,6 @@ async function main (args: string[]): Promise<void> {
 }
 
 main(process.argv.slice(2)).catch(error => {
-  console.error(error)
-  process.exit(1)
+    console.error(error)
+    process.exit(1)
 })

@@ -114,8 +114,6 @@ const NAME_PATTERN = new RegExp(
  */
 const BINAME_PATTERN = /^(?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?([a-z]\S+) ?/
 
-const NAME_CLEAN_PATTERN = /\b[A-Z][a-z]?\.\b|, \d{4}/g
-
 function compareRanks (a: Rank, b: Rank): number {
     return RANKS.indexOf(a) - RANKS.indexOf(b)
 }
@@ -136,7 +134,7 @@ function getSynonymRank (name: string, rank: Rank): Rank {
     const rest = name.replace(BINAME_PATTERN, '')
     const rankPrefix = rest.match(/^ (st|r|ab|f|var|ssp|subsp)\. /)
     if (rankPrefix) {
-      return RANK_LABELS_REVERSE[rankPrefix[1]] as string
+        return RANK_LABELS_REVERSE[rankPrefix[1]] as string
     } else if (/^ (?!sensu)[a-z0-9-]+($| )/.test(rest)) {
         return 'subspecies'
     } else {
@@ -147,7 +145,7 @@ function getSynonymRank (name: string, rank: Rank): Rank {
 function capitalizeAuthors (authors: string): string {
     return authors
         .replace(
-            /[^\x00-\x40\x5B-\x60\x7B-\x7F]+/g,
+            /[^\x00-\x40\x5B-\x60\x7B-\x7F]+/g, // eslint-disable-line no-control-regex
             name => isUpperCase(name) ? capitalize(name) : name
         )
         .replace(/ Y /g, ' y ')
@@ -302,8 +300,8 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
 
     // Amend "parent" with corrections
     if (item.taxonomicStatus === 'incorrect') {
-        const itemAsObject = item as { [index: string]: any }
-        const parentAsObject = parent as { [index: string]: any }
+        const itemAsObject = item as { [index: string]: unknown }
+        const parentAsObject = parent as { [index: string]: unknown }
 
         parent.incorrect = { ...parent }
         for (const key in item) {
@@ -320,43 +318,43 @@ function parseHeader (header: string): ResourceMetadata {
     const config = yaml.load(header)
 
     if (typeof config !== 'object' || Array.isArray(config) || config === null) {
-      throw new SyntaxError('yaml header should be an object')
+        throw new SyntaxError('yaml header should be an object')
     }
 
     // Invalid configuration
     let levels
     if (!('levels' in config)) {
-      levels = []
+        levels = []
     } else if (!Array.isArray(config.levels)) {
-      throw new SyntaxError('"levels" should be an array')
+        throw new SyntaxError('"levels" should be an array')
     } else {
-      levels = config.levels
+        levels = config.levels
     }
 
     let scope
     if (!('scope' in config)) {
-      scope = []
+        scope = []
     } else if (!Array.isArray(config.scope)) {
-      throw new SyntaxError('"scope" should be an array')
+        throw new SyntaxError('"scope" should be an array')
     } else {
-      scope = config.scope
+        scope = config.scope
     }
 
     // No taxon ranks
     if (levels.length === 0) {
-      throw new SyntaxError('Resource contains no taxa')
+        throw new SyntaxError('Resource contains no taxa')
     }
 
     // Invalid taxon ranks
     const invalidTaxonRanks = levels.filter(rank => !RANKS.includes(rank))
     if (invalidTaxonRanks.length) {
-      throw new SyntaxError(`"levels" contains invalid values: ${invalidTaxonRanks.join(', ')}`)
+        throw new SyntaxError(`"levels" contains invalid values: ${invalidTaxonRanks.join(', ')}`)
     }
 
     const metadata: ResourceMetadata = { levels, scope }
 
     if ('catalog' in config && typeof config.catalog === 'object' && config.catalog !== null) {
-      metadata.catalog = config.catalog
+        metadata.catalog = config.catalog
     }
 
     return metadata
@@ -449,8 +447,8 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         item.collectionCode = idBase.slice(0, -1)
 
         for (const rank of DWC_RANKS) {
-            const itemAsObject = item as { [index: string]: any }
-            const parentAsObject = parent as { [index: string]: any }
+            const itemAsObject = item as { [index: string]: unknown }
+            const parentAsObject = parent as { [index: string]: unknown }
 
             itemAsObject[rank] = undefined
             if (parentAsObject[rank]) {
@@ -497,8 +495,6 @@ export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Res
             metadata: config,
             taxa: {}
         }
-
-        const oldResource = oldResources[index] || resource
 
         let diff
         if (oldResources[index]) {
