@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { promises as fs, existsSync as fileExists } from 'fs'
 import * as path from 'path'
 
