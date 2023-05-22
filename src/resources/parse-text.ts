@@ -376,6 +376,17 @@ ${content.slice(offset).split('\n', 1)}
 ^`)
     }
 
+    // Check for missing leaf taxa
+    const missingLeafTaxa = new RegExp(`^(  ){0,${config.levels.length - 2}}(?![+=>] ).*\\n(?!\\1  )`, 'm')
+    const missingLeafTaxaMatch = content.match(missingLeafTaxa)
+    if (missingLeafTaxaMatch !== null) {
+        const offset = missingLeafTaxaMatch.index
+        const line = (content.slice(0, offset).match(/\n/g) || []).length + 1
+        throw new SyntaxError(`Missing leaf taxon at ${line}:0
+${content.slice(offset).split('\n', 1)}
+^`)
+    }
+
     return [config, content]
 }
 
