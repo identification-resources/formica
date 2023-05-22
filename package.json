@@ -11,6 +11,7 @@
     "loir-resources-index": "./lib/bin/process-resources-index.js"
   },
   "scripts": {
+    "test": "node --test --test-reporter spec",
     "lint": "eslint src",
     "build": "tsc -d",
     "preversion": "npm run lint",
