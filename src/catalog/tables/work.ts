@@ -26,6 +26,7 @@ export class Work extends Entity {
             license: { required: false, multiple: true, format: FORMATS.LICENSE },
             key_type: { required: true, multiple: true, format: FORMATS.KEY_TYPE },
             taxon: { required: true, multiple: true },
+            taxon_scope: { required: false, multiple: true },
             scope: { required: false, multiple: true },
             region: { required: true, multiple: true },
             complete: { required: false, multiple: false, format: FORMATS.COMPLETE },
