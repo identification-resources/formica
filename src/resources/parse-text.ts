@@ -383,9 +383,9 @@ ${content.slice(offset).split('\n', 1)}
     }
 
     // Check for missing leaf taxa
-    const leafTaxonRank = config.levels.findLast(rank => MAIN_RANKS.includes(rank))
+    const leafTaxonRank = config.levels.filter(rank => MAIN_RANKS.includes(rank)).pop() as string
     const leafTaxonParentIndent = config.levels.indexOf(leafTaxonRank) - 1
-    if (leafTaxonParentIndent >= 0) {
+    if (leafTaxonRank && leafTaxonParentIndent >= 0) {
         const missingLeafTaxa = new RegExp(`^((?:  ){0,${leafTaxonParentIndent}})(?![+=> ] ).*\\n(\\1(  )+[+=>].*\\n)*(?!\\1  )`, 'm')
         const missingLeafTaxaMatch = content.match(missingLeafTaxa)
         if (missingLeafTaxaMatch !== null) {
