@@ -1,3 +1,13 @@
+## [0.2.1](https://github.com/identification-resources/formica/compare/v0.2.0...v0.2.1) (2023-08-10)
+
+
+### Bug Fixes
+
+* **resources:** do not validate old versions ([1a8dd2e](https://github.com/identification-resources/formica/commit/1a8dd2e0e373489e287d1fd89dbb7443245c5214))
+* **resources:** fix check for missing leaf taxa ([035f1ad](https://github.com/identification-resources/formica/commit/035f1ad20efa80b388ec3828d4ace4518c7b344e))
+
+
+
 # [0.2.0](https://github.com/identification-resources/formica/compare/v0.1.1...v0.2.0) (2023-08-09)
 
 
