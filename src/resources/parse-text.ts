@@ -370,11 +370,7 @@ function parseHeader (header: string): ResourceMetadata {
     return metadata
 }
 
-function parseResource (resource: string): [ResourceMetadata, string] {
-    const [header, _, ...rest] = resource.split(/(\n---\n+)/)
-    const config = parseHeader(header)
-    const content = rest.join('')
-
+function validateResource (config: ResourceMetadata, content: string) {
     // Check for too much indentation
     const longerIndent = new RegExp(`^(  ){${config.levels.length - 1}}(?!  [+=>] ) `, 'm')
     const longerIndentMatch = content.match(longerIndent)
@@ -400,6 +396,12 @@ ${content.slice(offset).split('\n', 1)}
 ^`)
         }
     }
+}
+
+function parseResource (resource: string): [ResourceMetadata, string] {
+    const [header, _, ...rest] = resource.split(/(\n---\n+)/)
+    const config = parseHeader(header)
+    const content = rest.join('')
 
     return [config, content]
 }
@@ -513,6 +515,7 @@ export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Res
     const oldResources = old ? splitResources(old.txt) : []
     return splitResources(file).map((resource, index) => {
         const [config, content] = parseResource(resource)
+        validateResource(config, content)
         const template: Resource = {
             id: `${id}:${index + 1}`,
             file: `${id}-${index + 1}`,
