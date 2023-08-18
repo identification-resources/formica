@@ -103,3 +103,23 @@ declare enum ResourceDiffType {
     Modified = '~',
     Unchanged = '='
 }
+
+interface AmendedTaxon extends Taxon {
+    colTaxonID?: string,
+    colAcceptedTaxonID?: string,
+    gbifTaxonID?: string,
+    gbifAcceptedTaxonID?: string
+}
+
+interface AmendedResource extends Resource {
+    taxa: Record<TaxonId, AmendedTaxon>
+}
+
+interface TaxonMatch {
+    source: number,
+    id: string,
+    currentId?: string,
+    classificationPath: string[]
+}
+
+type GroupedNameMatches = Record<string, Record<string, Record<TaxonId, TaxonMatch>>>

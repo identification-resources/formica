@@ -8,17 +8,6 @@ import * as util from 'util'
 import { csv } from '../index'
 import { prompt, promptForAnswers, numericSort, runCommand } from './util'
 
-interface AmendedTaxon extends Taxon {
-    colTaxonID?: string,
-    gbifTaxonID?: string
-}
-
-interface AmendedResource extends Resource {
-    taxa: Record<TaxonId, AmendedTaxon>
-}
-
-type Classifications = Record<string, Array<[AmendedTaxon, string]>>
-
 const DWC_FIELDS: string[] = [
     'scientificNameID',
     'scientificName',
@@ -76,14 +65,6 @@ const GBIF_RANKS: Rank[] = [
 
 const EXCLUDED_GBIF_RECORDS: string[] = [
     '3230674' // Diptera Borkh. (= Saxifraga L.)
-]
-
-const VALID_COMMON_PREFIXES = [
-    'Plantae|Tracheophyta',
-    'Fungi',
-    'Fungi|Ascomycota',
-    'Fungi|Basidiomycota',
-    'Fungi|Zygomycota'
 ]
 
 function runGnverifier (names: string): Promise<string> {
@@ -178,11 +159,7 @@ class ResourceProcessor {
 
         const amendedResources = []
         for (const resource of resources) {
-            const [results, classifications] = await this.processResourceDwc(resource)
-
-            for (const source in classifications) {
-                await this.checkPrefix(resource, classifications, source)
-            }
+            const results = await this.processResourceDwc(resource)
 
             const skip = await this.shouldBeSkipped(resource.id)
 
@@ -260,22 +237,23 @@ class ResourceProcessor {
         }
     }
 
-    async processResourceDwc (resource: Resource): Promise<[AmendedResource, Classifications]> {
+    async processResourceDwc (resource: Resource): Promise<AmendedResource> {
         console.log(`${resource.workId}: matching ${resource.id}`)
-        const taxa: Record<string, Record<TaxonId, AmendedTaxon>> = {}
-        const names = []
+
+        const filteredResults: Record<TaxonId, TaxonMatch[]> = {}
+        const taxonNames: Record<string, TaxonId[]> = {}
+        const names = new Set()
         for (const id in resource.taxa) {
             const name = resource.taxa[id].scientificName
 
-            if (!taxa[name]) { taxa[name] = {} }
-            taxa[name][id] = { ...resource.taxa[id] }
+            if (!taxonNames[name]) { taxonNames[name] = [] }
+            taxonNames[name].push(id)
 
-            names.push(name)
+            names.add(name)
+            filteredResults[id] = []
         }
 
-        const result = await runGnverifier(names.join('\n'))
-        const classifications: Classifications = { '1': [], '11': [] }
-
+        const result = await runGnverifier(Array.from(names).join('\n'))
         for (const results of result.trim().split('\n')) {
             const { name, results: matches } = JSON.parse(results)
 
@@ -285,92 +263,113 @@ class ResourceProcessor {
 
             for (const match of matches) {
                 const source = match.dataSourceId
-                const classification = match.classificationPath
+                const currentRank = match.classificationRanks.split('|').pop()
 
-                for (const loirId in taxa[name]) {
-                    const taxon = taxa[name][loirId]
+                if (match.scoreDetails.cardinalityScore === 0) {
+                    // Rank mismatch
+                    continue
+                } else if (source === 11 && currentRank === 'species' && match.classificationPath.endsWith(' spec')) {
+                    // GBIF species like "Nomada spec"
+                    continue
+                } else if (source === 11 && EXCLUDED_GBIF_RECORDS.includes(match.recordId)) {
+                    // Excluded GBIF taxa
+                    continue
+                }
 
-                    if (match.scoreDetails.cardinalityScore === 0) {
-                        // Rank mismatch
+                for (const loirId of taxonNames[name]) {
+                    const taxon = resource.taxa[loirId]
+
+                    if (source === 11 && !GBIF_RANKS.includes(taxon.taxonRank)) {
+                        // Exclude GBIF matches for ranks that are not in GBIF
                         continue
-                    } else if (source === 11 && match.classificationRanks.endsWith('|species') && classification.endsWith(' spec')) {
-                        // GBIF species like "Nomada spec"
-                        continue
-                    } else if (source === 11 && EXCLUDED_GBIF_RECORDS.includes(match.recordId)) {
-                        // Excluded GBIF taxa
+                    } else if (source === 11 && !match.isSynonym && currentRank !== taxon.taxonRank) {
+                        // Exclude matches with rank mismatches (only possible
+                        // for non-synonyms).
                         continue
                     }
 
-                    if (source === 1 && !taxon.colTaxonID) {
-                        taxon.colTaxonID = match.recordId
-                        classifications[source].push([taxon, classification])
+                    if (!filteredResults[loirId]) {
+                        filteredResults[loirId] = []
                     }
-                    if (source === 11 && GBIF_RANKS.includes(taxon.taxonRank) && !taxon.gbifTaxonID) {
-                        taxon.gbifTaxonID = match.recordId
-                        classifications[source].push([taxon, classification])
-                    }
+
+                    filteredResults[loirId].push({
+                        source,
+                        id: match.recordId,
+                        currentId: match.currentRecordId,
+                        classificationPath: match.classificationPath.split('|')
+                    })
                 }
             }
         }
 
-        const results = {
-            ...resource,
-            taxa: Object.fromEntries(Object.values(resource.taxa).map(taxon => [
-                taxon.scientificNameID,
-                taxa[taxon.scientificName][taxon.scientificNameID]
-            ]))
+        const { taxonNames: { amendResource, groupNameMatches } } = await import('../index')
+        const groupedNameMatches = groupNameMatches(filteredResults)
+
+        let amendedResource: AmendedResource = { ...resource, taxa: { ...resource.taxa } }
+        for (const source in groupedNameMatches) {
+            const matches = await this.selectPrefixes(resource, groupedNameMatches, source)
+            amendResource(amendedResource, source, matches)
         }
 
-        return [results, classifications]
+        return amendedResource
     }
 
-    async checkPrefix (resource: AmendedResource, classifications: Classifications, source: string): Promise<void> {
-        const lists = classifications[source]
-        if (!lists.length) { return }
-        const prefix = lists[0][1].split('|')
+    async selectPrefixes (resource: Resource, groupedNameMatches: GroupedNameMatches, source: string): Promise<Record<TaxonId, TaxonMatch>> {
+        const prefixes = Object.keys(groupedNameMatches[source])
+        if (prefixes.length === 0) {
+            return {}
+        } else if (prefixes.length === 1) {
+            return groupedNameMatches[source][prefixes[0]]
+        }
 
-        for (const [taxon, list] of lists.slice(1)) {
-            const parts = list.split('|')
-            for (let i = 0; i < parts.length; i++) {
-                if (parts[i] !== prefix[i] && i < 3) {
-                    let choice
+        console.error(`${resource.workId}: source ${source} results in multiple prefixes`)
 
-                    if (source === '1' || taxon.taxonomicStatus !== 'accepted') {
-                        choice = 'd'
-                    } else if (VALID_COMMON_PREFIXES.includes(prefix.slice(0, i).join('|'))) {
-                        choice = 'k'
-                    } else {
-                        console.log(`${resource.workId}: source ${source} results in short prefix "${prefix.slice(0, i).join('|')}" (${i} taxa)`)
-                        console.log(`  taxon: ${taxon.scientificNameID} "${taxon.scientificName}"`)
-                        console.log(`  class: ${parts.join('|')}`)
-                        console.log(`  prefx: ${prefix.join('|')}`)
+        let choice
+        if (source === '1') {
+            console.error(`  Automatically selecting most common prefix...`)
+            choice = '1'
+        } else {
+            for (let i = 0; i < prefixes.length; i++) {
+                const prefix = prefixes[i]
+                const taxa = groupedNameMatches[source][prefix]
+                const taxonIds = Object.keys(taxa)
 
-                        choice = await promptForAnswers(`  Keep or delete (k/d)? `, ['k', 'K', 'd', 'D'])
-                    }
-
-                    switch (choice) {
-                        case 'k':
-                        case 'K': {
-                            console.log(`  keeping...`)
-                            break
-                        }
-
-                        case 'd':
-                        case 'D': {
-                            console.log(`  deleting...`)
-                            if (source === '1') {
-                                delete taxon.colTaxonID
-                            } else if (source === '11') {
-                                delete taxon.gbifTaxonID
-                            }
-                            break
-                        }
-                    }
-
-                    break
+                console.error(`  [${i + 1}] ${prefix} (${taxonIds.length} taxa)`)
+                for (let j = 0; j < Math.min(9, taxonIds.length); j++) {
+                    const taxonId = taxonIds[j]
+                    const taxon = resource.taxa[taxonId]
+                    const match = taxa[taxonId]
+                    console.error(`      taxon: ${taxonId} "${taxon.scientificName}" - ${match.classificationPath.join('|')}`)
+                }
+                if (taxonIds.length > 9) {
+                    console.error(`      ...`)
                 }
             }
+
+            do {
+                choice = await prompt(`  Select prefixes (1-${prefixes.length})? `)
+            } while (!/^(|\d+(,\d+)*)$/.test(choice))
         }
+
+        console.error(`  Applying selection...`)
+
+        if (choice === '') {
+            return {}
+        }
+
+        const matches: Record<TaxonId, TaxonMatch> = {}
+        for (const i of choice.split(',')) {
+            const prefix = prefixes[parseInt(i) - 1]
+            const taxa = groupedNameMatches[source][prefix]
+            for (const id in taxa) {
+                if (id in matches) {
+                    continue
+                }
+                matches[id] = taxa[id]
+            }
+        }
+
+        return matches
     }
 
     checkResults (resource: AmendedResource): boolean {
