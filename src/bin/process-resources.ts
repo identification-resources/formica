@@ -74,6 +74,10 @@ const GBIF_RANKS: Rank[] = [
     'variety'
 ]
 
+const EXCLUDED_GBIF_RECORDS: string[] = [
+    '3230674' // Diptera Borkh. (= Saxifraga L.)
+]
+
 const VALID_COMMON_PREFIXES = [
     'Plantae|Tracheophyta',
     'Fungi',
@@ -84,7 +88,7 @@ const VALID_COMMON_PREFIXES = [
 
 function runGnverifier (names: string): Promise<string> {
     return new Promise((resolve, reject) => {
-        const proc = spawn('gnverifier', ['-s', '1,11', '-M'])
+        const proc = spawn('gnverifier', ['-s', '1,11', '-f', 'compact', '-M'])
         let stdout = ''
         proc.stdout.on('data', data => { stdout += data })
         proc.stderr.pipe(process.stdout)
@@ -272,22 +276,39 @@ class ResourceProcessor {
         const result = await runGnverifier(names.join('\n'))
         const classifications: Classifications = { '1': [], '11': [] }
 
-        const [header, ...matches] = csv.parseCsv(result)
-        for (const match of matches) {
-            const name = match[header.indexOf('ScientificName')]
-            const source = match[header.indexOf('DataSourceId')]
-            const id = match[header.indexOf('TaxonId')]
-            const classification = match[header.indexOf('ClassificationPath')]
+        for (const results of result.trim().split('\n')) {
+            const { name, results: matches } = JSON.parse(results)
 
-            for (const loirId in taxa[name]) {
-                const taxon = taxa[name][loirId]
-                if (source === '1' && !taxon.colTaxonID) {
-                    taxon.colTaxonID = id
-                    classifications[source].push([taxon, classification])
-                }
-                if (source === '11' && GBIF_RANKS.includes(taxon.taxonRank) && !taxon.gbifTaxonID) {
-                    taxon.gbifTaxonID = id
-                    classifications[source].push([taxon, classification])
+            if (!matches) {
+                continue
+            }
+
+            for (const match of matches) {
+                const source = match.dataSourceId
+                const classification = match.classificationPath
+
+                for (const loirId in taxa[name]) {
+                    const taxon = taxa[name][loirId]
+
+                    if (match.scoreDetails.cardinalityScore === 0) {
+                        // Rank mismatch
+                        continue
+                    } else if (source === 11 && match.classificationRanks.endsWith('|species') && classification.endsWith(' spec')) {
+                        // GBIF species like "Nomada spec"
+                        continue
+                    } else if (source === 11 && EXCLUDED_GBIF_RECORDS.includes(match.recordId)) {
+                        // Excluded GBIF taxa
+                        continue
+                    }
+
+                    if (source === 1 && !taxon.colTaxonID) {
+                        taxon.colTaxonID = match.recordId
+                        classifications[source].push([taxon, classification])
+                    }
+                    if (source === 11 && GBIF_RANKS.includes(taxon.taxonRank) && !taxon.gbifTaxonID) {
+                        taxon.gbifTaxonID = match.recordId
+                        classifications[source].push([taxon, classification])
+                    }
                 }
             }
         }
