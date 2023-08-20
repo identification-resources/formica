@@ -63,10 +63,6 @@ const GBIF_RANKS: Rank[] = [
     'variety'
 ]
 
-const EXCLUDED_GBIF_RECORDS: string[] = [
-    '3230674' // Diptera Borkh. (= Saxifraga L.)
-]
-
 function runGnverifier (names: string): Promise<string> {
     return new Promise((resolve, reject) => {
         const proc = spawn('gnverifier', ['-s', '1,11', '-f', 'compact', '-M'])
@@ -271,9 +267,6 @@ class ResourceProcessor {
                 } else if (source === 11 && currentRank === 'species' && match.classificationPath.endsWith(' spec')) {
                     // GBIF species like "Nomada spec"
                     continue
-                } else if (source === 11 && EXCLUDED_GBIF_RECORDS.includes(match.recordId)) {
-                    // Excluded GBIF taxa
-                    continue
                 }
 
                 for (const loirId of taxonNames[name]) {
@@ -322,11 +315,28 @@ class ResourceProcessor {
             return groupedNameMatches[source][prefixes[0]]
         }
 
+        // Count total mapped taxa
+        const mappedTaxa: Record<TaxonId, boolean> = {}
+        for (const prefix of prefixes) {
+            for (const taxon in groupedNameMatches[source][prefix]) {
+                mappedTaxa[taxon] = true
+            }
+        }
+        const missedTaxonCount = Object.keys(mappedTaxa).length - Object.keys(groupedNameMatches[source][prefixes[0]]).length
+
+        if (missedTaxonCount === 0) {
+            // Multiple prefixes but the first one maps all taxa (not counting that are unmapped in all prefixes)
+            return groupedNameMatches[source][prefixes[0]]
+        }
+
         console.error(`${resource.workId}: source ${source} results in multiple prefixes`)
 
         let choice
-        if (source === '1') {
-            console.error(`  Automatically selecting most common prefix...`)
+        if (missedTaxonCount <= 5) {
+            console.error(`  Most common prefix misses ${missedTaxonCount} taxa: automatically selecting most common prefix...`)
+            choice = '1'
+        } else if (source === '1') {
+            console.error(`  Catalogue of Life: automatically selecting most common prefix...`)
             choice = '1'
         } else {
             for (let i = 0; i < prefixes.length; i++) {
