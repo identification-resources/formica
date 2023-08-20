@@ -1,3 +1,16 @@
+# [0.3.0](https://github.com/identification-resources/formica/compare/v0.2.1...v0.3.0) (2023-08-20)
+
+
+### Features
+
+* **resources:** add accepted ids to dwc and index ([1b5aba8](https://github.com/identification-resources/formica/commit/1b5aba8ff07bba32fc1bbf49927fef7a880eb35e))
+* **resources:** allow updates of just mappings ([0ea62c1](https://github.com/identification-resources/formica/commit/0ea62c143a49129709960de123c0037973356487))
+* **resources:** improve prefix selection heuristics ([7c2e0c9](https://github.com/identification-resources/formica/commit/7c2e0c99d9de7490314f971e8b4e9e5e190a81c2))
+* **resources:** improve taxon name matching ([78ff480](https://github.com/identification-resources/formica/commit/78ff480485ca42bd1d1f2893f230e61db6cb6be8)), closes [#2](https://github.com/identification-resources/formica/issues/2)
+* **resources:** test for rank mismatch ([0e69b7f](https://github.com/identification-resources/formica/commit/0e69b7f0a6654fa5255e797be7516cd06edb4df3)), closes [#2](https://github.com/identification-resources/formica/issues/2)
+
+
+
 ## [0.2.1](https://github.com/identification-resources/formica/compare/v0.2.0...v0.2.1) (2023-08-10)
 
 
