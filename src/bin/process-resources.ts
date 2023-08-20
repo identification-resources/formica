@@ -312,7 +312,7 @@ class ResourceProcessor {
         const { taxonNames: { amendResource, groupNameMatches } } = await import('../index')
         const groupedNameMatches = groupNameMatches(filteredResults)
 
-        let amendedResource: AmendedResource = { ...resource, taxa: { ...resource.taxa } }
+        const amendedResource: AmendedResource = { ...resource, taxa: { ...resource.taxa } }
         for (const source in groupedNameMatches) {
             const matches = await this.selectPrefixes(resource, groupedNameMatches, source)
             amendResource(amendedResource, source, matches)
