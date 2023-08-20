@@ -38,7 +38,9 @@ const DWC_FIELDS: string[] = [
     'higherClassification',
 
     'colTaxonID',
-    'gbifTaxonID'
+    'gbifTaxonID',
+    'colAcceptedTaxonID',
+    'gbifAcceptedTaxonID'
 ]
 
 const DISPLAY_FIELDS: string[] = [

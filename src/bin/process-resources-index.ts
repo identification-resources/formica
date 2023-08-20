@@ -21,6 +21,14 @@ function sortObject (object: Record<string, any>): Record<string, any> {
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+function addTaxon (gbifIndex: Record<string, TaxonId[]>, gbifId: string, taxon: string[]) {
+    if (!(gbifId in gbifIndex)) {
+        gbifIndex[gbifId] = []
+    }
+    gbifIndex[gbifId].push(taxon[0])
+    gbifIndex[gbifId].sort(numericSort)
+}
+
 async function main (args: string[]): Promise<void> {
     const REPO_ROOT = path.resolve(args[0])
 
@@ -50,11 +58,10 @@ async function main (args: string[]): Promise<void> {
             for (const taxon of dwc) {
                 const gbifId = taxon[25]
                 if (gbifId) {
-                    if (!(gbifId in gbifIndex)) {
-                        gbifIndex[gbifId] = []
+                    addTaxon(gbifIndex, gbifId, taxon)
+                    if (taxon[27] !== taxon[25]) {
+                        addTaxon(gbifIndex, taxon[27], taxon)
                     }
-                    gbifIndex[gbifId].push(taxon[0])
-                    gbifIndex[gbifId].sort(numericSort)
                 }
                 amendedResource.taxonCount += 1
             }
