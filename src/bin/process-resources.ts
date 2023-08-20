@@ -134,6 +134,18 @@ class ResourceProcessor {
         }
     }
 
+    async runMappingsUpdate (): Promise<void> {
+        const input = await fs.readdir(this.DIR_TXT)
+
+        const ids = input
+            .map(file => path.basename(file, '.txt'))
+            .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)))
+
+        for (const id of ids) {
+            await this.processWork(id, true)
+        }
+    }
+
     async processWork (id: WorkId, update?: boolean): Promise<void> {
         const resources = await this.processResources(id, update)
 
@@ -418,6 +430,9 @@ function main (): void {
             update: {
                 type: 'boolean',
                 short: 'u'
+            },
+            'update-mappings': {
+                type: 'boolean'
             }
         },
         allowPositionals: true
@@ -428,7 +443,15 @@ function main (): void {
         process.stdout.write('\n')
     })
 
-    const task = args.values.update ? processor.runUpdate() : processor.run()
+    let task
+    if (args.values.update) {
+        task = processor.runUpdate()
+    } else if (args.values['update-mappings']) {
+        task = processor.runMappingsUpdate()
+    } else {
+        task = processor.run()
+    }
+
     task.catch(error => {
         console.error(error)
         process.exit(1)
