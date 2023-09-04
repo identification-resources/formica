@@ -372,7 +372,7 @@ function parseHeader (header: string): ResourceMetadata {
 
 function validateResource (config: ResourceMetadata, content: string) {
     // Check for too much indentation
-    const longerIndent = new RegExp(`^(  ){${config.levels.length - 1}}(?!  [+=] |    > ) `, 'm')
+    const longerIndent = new RegExp(`^(  ){${config.levels.length - 1}}(?!  [+=>] |    > ) `, 'm')
     const longerIndentMatch = content.match(longerIndent)
     if (longerIndentMatch !== null) {
         const offset = longerIndentMatch.index
