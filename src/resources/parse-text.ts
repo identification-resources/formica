@@ -426,7 +426,7 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
 
         if (lineIndent > groupIndent) {
             // Do not count synonyms as parents (unless this is correcting a typo in the synonym)
-            if (data[previousId] && data[previousId].taxonomicStatus === 'accepted' || /^(  )+> /.test(line)) {
+            if (data[previousId] && data[previousId].taxonomicStatus === 'accepted' || /^( {2})+> /.test(line)) {
                 parents.push(previousId)
             } else {
                 parents.push(null)
