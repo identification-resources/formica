@@ -425,8 +425,8 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         const lineIndent = (line.match(/^ */) as string[])[0].length
 
         if (lineIndent > groupIndent) {
-            // Do not count synonyms as parents
-            if (data[previousId] && data[previousId].taxonomicStatus === 'accepted') {
+            // Do not count synonyms as parents (unless this is correcting a typo in the synonym)
+            if (data[previousId] && data[previousId].taxonomicStatus === 'accepted' || /^(  )+> /.test(line)) {
                 parents.push(previousId)
             } else {
                 parents.push(null)
