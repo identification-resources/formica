@@ -1,3 +1,14 @@
+## [0.3.1](https://github.com/identification-resources/formica/compare/v0.3.0...v0.3.1) (2023-09-04)
+
+
+### Bug Fixes
+
+* **resources:** allow correction of synonyms of lowest taxa ([c737d5b](https://github.com/identification-resources/formica/commit/c737d5b09d5e5b24f4cc2c8cff88c9ada8d0ab7b))
+* **resources:** fix regression in c737d5b ([d4e52e9](https://github.com/identification-resources/formica/commit/d4e52e95ed1a35dabbd80b9f9aace1a824fdae98))
+* **resources:** handle corrections to synonyms ([21ed9b7](https://github.com/identification-resources/formica/commit/21ed9b79f77e1e6d0639d96ed9822d5212a85a2e)), closes [#4](https://github.com/identification-resources/formica/issues/4)
+
+
+
 # [0.3.0](https://github.com/identification-resources/formica/compare/v0.2.1...v0.3.0) (2023-08-20)
 
 
