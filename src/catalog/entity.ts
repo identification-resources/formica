@@ -8,7 +8,7 @@ export class Entity {
     constructor (values: Record<string, string>, schema: Schema) {
         this.fields = {}
         for (const key in values) {
-            const value = parseValue(values[key], !!schema[key].multiple)
+            const value = parseValue(values[key], !!schema[key] && !!schema[key].multiple)
             if (value !== null) {
                 this.fields[key] = value
             }
@@ -47,6 +47,11 @@ export class Entity {
 
     _validateField (field: string) {
         const errors = []
+
+        if (!(field in this.schema)) {
+            errors.push('Field unknown')
+            return errors
+        }
 
         if (!(field in this.fields)) {
             if (this.schema[field].required) {
