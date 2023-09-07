@@ -37,7 +37,7 @@ export class Entity {
 
     validate (): FieldError[] {
         const errors = []
-        for (const field in this.fields) {
+        for (const field in { ...this.fields, ...this.schema }) {
             for (const error of this._validateField(field)) {
                 errors.push({ field, error })
             }

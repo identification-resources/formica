@@ -1,7 +1,22 @@
 const test = require('node:test')
 const assert = require('assert')
 
-const { resources } = require('../lib')
+const { catalog, resources } = require('../lib')
+
+test('catalog', async (t) => {
+    await t.test('reports missing required fields', (t) => {
+        const errors = catalog.loadData(`id
+B1`, 'catalog').validate()
+        assert.deepStrictEqual(errors, [
+            { entity: 'B1', field: 'title', error: 'Value(s) required but missing' },
+            { entity: 'B1', field: 'entry_type', error: 'Value(s) required but missing' },
+            { entity: 'B1', field: 'language', error: 'Value(s) required but missing' },
+            { entity: 'B1', field: 'key_type', error: 'Value(s) required but missing' },
+            { entity: 'B1', field: 'taxon', error: 'Value(s) required but missing' },
+            { entity: 'B1', field: 'region', error: 'Value(s) required but missing' }
+        ])
+    })
+})
 
 test('resources', async (t) => {
     await t.test('parses author with initials', (t) => {
