@@ -1,3 +1,18 @@
+# [0.4.0](https://github.com/identification-resources/formica/compare/v0.3.1...v0.4.0) (2023-09-07)
+
+
+### Bug Fixes
+
+* **catalog:** validation checks for unknown fields ([5fe5cf0](https://github.com/identification-resources/formica/commit/5fe5cf0b8cf4db7c4af50a897821077e410a1e09))
+* **catalog:** verify if required fields are missing ([c327ae4](https://github.com/identification-resources/formica/commit/c327ae458a80567aac34dd03f3970dcf9d575479))
+
+
+### Features
+
+* **catalog:** add duplicate_of field ([e4a8bbe](https://github.com/identification-resources/formica/commit/e4a8bbecef9c6a40d0f2cc5d4e8bb67685a453ff))
+
+
+
 ## [0.3.1](https://github.com/identification-resources/formica/compare/v0.3.0...v0.3.1) (2023-09-04)
 
 
