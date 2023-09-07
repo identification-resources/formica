@@ -34,7 +34,7 @@ export class Work extends Entity {
             listed_in: { required: false, multiple: true, format: FORMATS.ID },
             part_of: { required: false, multiple: true, format: FORMATS.ID },
             version_of: { required: false, multiple: true, format: FORMATS.ID },
-            // duplicate_of: { required: false, multiple: false, format: FORMATS.ID }
+            duplicate_of: { required: false, multiple: false, format: FORMATS.ID }
         })
     }
 
