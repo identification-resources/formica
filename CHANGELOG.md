@@ -1,3 +1,12 @@
+## [0.4.1](https://github.com/identification-resources/formica/compare/v0.4.0...v0.4.1) (2023-09-07)
+
+
+### Bug Fixes
+
+* **catalog:** fix typo in duplicate_of schema ([fbb6333](https://github.com/identification-resources/formica/commit/fbb6333d10dd6f5846856ea8de81d941ce539d21))
+
+
+
 # [0.4.0](https://github.com/identification-resources/formica/compare/v0.3.1...v0.4.0) (2023-09-07)
 
 
