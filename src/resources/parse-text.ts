@@ -142,7 +142,7 @@ function getSynonymRank (name: string, rank: Rank): Rank {
     const rankPrefix = rest.match(/^(?: |^)(st|r|ab|f|var|ssp|subsp)\. /)
     if (rankPrefix) {
         return RANK_LABELS_REVERSE[rankPrefix[1]] as string
-    } else (!BINAME_PATTERN.test(name)) {
+    } else if (!BINAME_PATTERN.test(name)) {
         return rank
     } else if (/^ (?!sensu)[a-z0-9-]+($| )/.test(rest)) {
         return 'subspecies'
