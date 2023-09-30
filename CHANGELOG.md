@@ -1,3 +1,14 @@
+## [0.4.2](https://github.com/identification-resources/formica/compare/v0.4.1...v0.4.2) (2023-09-30)
+
+
+### Bug Fixes
+
+* **resources:** allow simpler intraspecific synonyms ([978186c](https://github.com/identification-resources/formica/commit/978186cbaf469f3085c24c2e8bc8ffb1f83f2799)), closes [#9](https://github.com/identification-resources/formica/issues/9)
+* **resources:** correct synonym rank determintation ([766ea2a](https://github.com/identification-resources/formica/commit/766ea2af14ff3aa64a7a2e19ed096836d38182cf))
+* **resources:** do not parse "indet." lines as taxa ([f4debf6](https://github.com/identification-resources/formica/commit/f4debf695b0cdb375bfb60ab5ce942fa2f7dee85)), closes [#8](https://github.com/identification-resources/formica/issues/8)
+
+
+
 ## [0.4.1](https://github.com/identification-resources/formica/compare/v0.4.0...v0.4.1) (2023-09-07)
 
 
