@@ -90,4 +90,14 @@ Drymus
 `, 'T1')
         assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Drymus')
     })
+
+    await t.test('parses names containing non-ASCII characters', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [species]
+---
+
+Nematus fåhraei Thomson
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Nematus fåhraei Thomson')
+    })
 })

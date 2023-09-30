@@ -120,9 +120,9 @@ const NAME_PATTERN = new RegExp(
  *   $1 genus+subgenus (+ trailing space): (?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?
  *     $1.1 genus: ([A-Z]\S+)
  *     $1.2 subgenus: (?:\(([A-Z]\S+?)\) )?
- *   $2 species: ((?:x )?[a-z0-9-]+)
+ *   $2 species: ((?:x )?[a-z]\S+)
  */
-const BINAME_PATTERN = /^(?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?((?:x )?[a-z0-9-]+)(?= |$)/
+const BINAME_PATTERN = /^(?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?((?:x )?[a-z]\S+)(?= |$)/
 
 function compareRanks (a: Rank, b: Rank): number {
     return RANKS.indexOf(a) - RANKS.indexOf(b)
