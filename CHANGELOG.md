@@ -1,3 +1,12 @@
+## [0.4.3](https://github.com/identification-resources/formica/compare/v0.4.2...v0.4.3) (2023-09-30)
+
+
+### Bug Fixes
+
+* **resource:** fix regression in taxon parsing ([098477b](https://github.com/identification-resources/formica/commit/098477b5914324a3c15ec885617d4cf30996f30d))
+
+
+
 ## [0.4.2](https://github.com/identification-resources/formica/compare/v0.4.1...v0.4.2) (2023-09-30)
 
 
