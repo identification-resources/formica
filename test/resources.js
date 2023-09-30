@@ -79,4 +79,15 @@ Lygaeus equestris (Linnaeus, 1758)
 `, 'T1')
         assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Lygaeus equestris f. lactans Horváth, 1899')
     })
+
+    await t.test('does not validate "indet." lines', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus, species]
+---
+
+Drymus
+  Unknown sp.
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Drymus')
+    })
 })

@@ -422,6 +422,12 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
             continue
         }
 
+        // Do not process "indet" lines further, as they only serve to indicate
+        // that subtaxa are explicitely omitted
+        if (Array.from(INDET_SUFFIXES).some(suffix => line.endsWith(' ' + suffix))) {
+            continue
+        }
+
         const lineIndent = (line.match(/^ */) as string[])[0].length
 
         if (lineIndent > groupIndent) {
@@ -452,9 +458,8 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         const rank = resource.metadata.levels[groupIndent / 2]
         const item = parseName(name, rank, parent)
         const isSynonym = item.taxonomicStatus !== 'accepted'
-        const isIndet = Array.from(INDET_SUFFIXES).some(suffix => name.endsWith(' ' + suffix))
 
-        if (item.taxonomicStatus === 'incorrect' || isIndet) {
+        if (item.taxonomicStatus === 'incorrect') {
             continue
         }
 
