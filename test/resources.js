@@ -57,4 +57,26 @@ Cydnidae
     limbosus`, 'T1')
         })
     })
+
+    await t.test('parses synonyms starting with intraspecific ranks', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [species]
+---
+
+Lygaeus equestris (Linnaeus, 1758)
+  = f. lactans Horváth, 1899
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Lygaeus equestris f. lactans Horváth, 1899')
+    })
+
+    await t.test('parses accepted taxa starting with intraspecific ranks', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [species, form]
+---
+
+Lygaeus equestris (Linnaeus, 1758)
+  f. lactans Horváth, 1899
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Lygaeus equestris f. lactans Horváth, 1899')
+    })
 })

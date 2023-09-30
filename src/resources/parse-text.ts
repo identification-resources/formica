@@ -120,9 +120,9 @@ const NAME_PATTERN = new RegExp(
  *   $1 genus+subgenus (+ trailing space): (?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?
  *     $1.1 genus: ([A-Z]\S+)
  *     $1.2 subgenus: (?:\(([A-Z]\S+?)\) )?
- *   $2 species: ([a-z]\S+)
+ *   $2 species: ((?:x )?[a-z0-9-]+)
  */
-const BINAME_PATTERN = /^(?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?([a-z]\S+) ?/
+const BINAME_PATTERN = /^(?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?((?:x )?[a-z0-9-]+)(?= |$)/
 
 function compareRanks (a: Rank, b: Rank): number {
     return RANKS.indexOf(a) - RANKS.indexOf(b)
@@ -138,13 +138,12 @@ function isUpperCase (name: string): boolean {
 
 function getSynonymRank (name: string, rank: Rank): Rank {
     const BINAME_PATTERN = /^([A-Z]\S+ (\([A-Z]\S+\) )?)?(x )?[a-z0-9-]+(?= |$)/
-    if (!BINAME_PATTERN.test(name)) {
-        return rank
-    }
     const rest = name.replace(BINAME_PATTERN, '')
-    const rankPrefix = rest.match(/^ (st|r|ab|f|var|ssp|subsp)\. /)
+    const rankPrefix = rest.match(/^(?: |^)(st|r|ab|f|var|ssp|subsp)\. /)
     if (rankPrefix) {
         return RANK_LABELS_REVERSE[rankPrefix[1]] as string
+    } else (!BINAME_PATTERN.test(name)) {
+        return rank
     } else if (/^ (?!sensu)[a-z0-9-]+($| )/.test(rest)) {
         return 'subspecies'
     } else {
@@ -220,8 +219,9 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
         if (compareRanks('species', rank) < 0) {
             const speciesPrefix = parseContext.specificEpithet + ' '
             if (name.startsWith(speciesPrefix)) {
-                name = name.slice(speciesPrefix.length).replace(/^(st|r|ab|f|var|ssp|subsp)\. /, '')
+                name = name.slice(speciesPrefix.length)
             }
+            name = name.replace(/^(st|r|ab|f|var|ssp|subsp)\. /, '')
         }
     }
 
