@@ -1,4 +1,5 @@
 import * as yaml from 'js-yaml'
+import { Work } from '../catalog/tables/work'
 import { createDiff, ResourceDiffType } from './diff-resource'
 
 const RANKS: Rank[] = [
@@ -341,13 +342,8 @@ function parseHeader (header: string): ResourceMetadata {
         levels = config.levels
     }
 
-    let scope
-    if (!('scope' in config)) {
-        scope = []
-    } else if (!Array.isArray(config.scope)) {
-        throw new SyntaxError('"scope" should be an array')
-    } else {
-        scope = config.scope
+    if ('scope' in config) {
+        throw new SyntaxError('"scope" data should go in "catalog"')
     }
 
     // No taxon ranks
@@ -361,10 +357,29 @@ function parseHeader (header: string): ResourceMetadata {
         throw new SyntaxError(`"levels" contains invalid values: ${invalidTaxonRanks.join(', ')}`)
     }
 
-    const metadata: ResourceMetadata = { levels, scope }
+    const metadata: ResourceMetadata = { levels }
 
     if ('catalog' in config && typeof config.catalog === 'object' && config.catalog !== null) {
-        metadata.catalog = config.catalog
+        const catalog: Record<string, string> = {}
+        for (const key in config.catalog) {
+            const value = config.catalog[key as keyof object]
+            if (typeof value === 'number') {
+                catalog[key] = (value as number).toString()
+            } else if (typeof value === 'string') {
+                catalog[key] = value
+            } else {
+                throw new SyntaxError(`"catalog" should contain only strings ("${key}")`)
+            }
+        }
+        const work = new Work(catalog)
+        const errors = work.validate().filter(({ error }) => error !== 'Value(s) required but missing')
+        if (errors.length > 0) {
+            throw new SyntaxError(`"catalog" contains errors: ${errors.map(({ field, error }) => `[${field}] ${error}`).join('; ')}`)
+        }
+        metadata.catalog = {}
+        for (const key in work.fields) {
+            metadata.catalog[key] = work.get(key) as Value
+        }
     }
 
     return metadata

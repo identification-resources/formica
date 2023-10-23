@@ -71,8 +71,7 @@ interface Taxon extends WorkingTaxon {
 
 interface ResourceMetadata {
     levels: Rank[],
-    scope: string[],
-    catalog?: object
+    catalog?: Record<string, Value>
 }
 
 interface Resource {
