@@ -24,11 +24,11 @@ export const FORMATS = {
 
 export const CHECK = {
     MULTILANG (entry: Record<string, Value>) {
-        return entry.language.length > 1
+        return Array.isArray(entry.language) && entry.language.length > 1
     },
 
     ISBN (entry: Record<string, Value>) {
-        if (entry.ISBN.length < 2) { return false }
+        if (!Array.isArray(entry.ISBN) || entry.ISBN.length < 2) { return false }
         const a = entry.ISBN[0].length === 10
         const b = entry.ISBN[0].length === 13
         const c = entry.ISBN[1].length === 10
