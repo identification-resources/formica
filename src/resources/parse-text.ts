@@ -219,7 +219,7 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     }
 
     // In taxa of group, species or lower, the name should just contain the
-    // (intra)specific epithet and the author information & remarks when processing
+    // (infra)specific epithet and the author information & remarks when processing
     // further.
     if (compareRanks('group', rank) <= 0) {
         // Remove genus
@@ -231,7 +231,7 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
         // Remove subgenus
         name = name.replace(/^\(.*?\) /, '')
 
-        // Intraspecific taxa
+        // Infraspecific taxa
         if (compareRanks('species', rank) < 0) {
             // Remove specific epithet
             const species = parentContext.incorrect.specificEpithet || parentContext.specificEpithet || ''
@@ -308,23 +308,23 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
         item.genericName = parentContext.genus
         item.infragenericEpithet = parentContext.subgenus
         item.specificEpithet = parentContext.specificEpithet
-        item.intraspecificEpithet = taxon.toLowerCase()
+        item.infraspecificEpithet = taxon.toLowerCase()
 
         // If possible, names below species should have abbreviations for ranks,
         // like "subsp."
         const nameParts = [
             item.genericName,
             item.specificEpithet,
-            item.intraspecificEpithet
+            item.infraspecificEpithet
         ]
         if (item.taxonRank in RANK_LABELS) {
             nameParts.splice(2, 0, RANK_LABELS[item.taxonRank])
         }
         item.scientificName = nameParts.join(' ')
 
-        if (item.intraspecificEpithet !== taxon) {
+        if (item.infraspecificEpithet !== taxon) {
             console.log(item, taxon)
-            throw new Error(`Intraspecific epithet should be lowercase: "${taxon}"`)
+            throw new Error(`Infraspecific epithet should be lowercase: "${taxon}"`)
         }
     }
 

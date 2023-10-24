@@ -34,7 +34,7 @@ interface WorkingTaxon {
     genericName?: string,
     infragenericEpithet?: string,
     specificEpithet?: string,
-    intraspecificEpithet?: string,
+    infraspecificEpithet?: string,
 
     taxonRank?: Rank,
     taxonRemarks?: string,

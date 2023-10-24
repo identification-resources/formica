@@ -14,14 +14,14 @@ export enum ResourceProcessorSource {
     Modified = 'modified'
 }
 
-const DWC_FIELDS: string[] = [
+const DWC_FIELDS: (keyof AmendedTaxon)[] = [
     'scientificNameID',
     'scientificName',
     'scientificNameAuthorship',
     'genericName',
-    'intragenericEpithet',
+    'infragenericEpithet',
     'specificEpithet',
-    'intraspecificEpithet',
+    'infraspecificEpithet',
 
     'taxonRank',
     'taxonRemarks',
@@ -50,7 +50,7 @@ const DWC_FIELDS: string[] = [
     'gbifAcceptedTaxonID'
 ]
 
-const DISPLAY_FIELDS: string[] = [
+const DISPLAY_FIELDS: (keyof AmendedTaxon)[] = [
     'scientificNameID',
     'taxonRank',
     'scientificName',
@@ -154,7 +154,7 @@ class ResourceProcessor {
 
         await Promise.all(resources.map(resource => {
             const header = DWC_FIELDS
-            const table = [header]
+            const table: string[][] = [header]
 
             for (const id in resource.taxa) {
                 const taxon = resource.taxa[id] as unknown as Record<string, string | undefined>
