@@ -23,7 +23,7 @@ export function formatCsv (table: string[][], delimiter = ',') {
         .map((row: string[]) => {
             return row.map(value => {
                 if (/["\n]/.test(value) || value.includes(delimiter)) {
-                    return `"${value.replace(/"/, '"""')}"`
+                    return `"${value.replace(/"/g, '""')}"`
                 } else {
                     return value
                 }
