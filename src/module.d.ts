@@ -122,3 +122,14 @@ interface TaxonMatch {
 }
 
 type GroupedNameMatches = Record<string, Record<string, Record<TaxonId, TaxonMatch>>>
+
+declare enum ResourceProcessorSource {
+    All = 'all',
+    Unprocessed = 'unprocessed',
+    Modified = 'modified'
+}
+
+interface ResourceProcessorConfig {
+    update: boolean,
+    updateMappings: boolean
+}

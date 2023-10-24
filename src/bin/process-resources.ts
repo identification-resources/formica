@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 
-import { promises as fs } from 'fs'
+import { promises as fs, existsSync as doesFileExist } from 'fs'
 import * as path from 'path'
 import { spawn } from 'child_process'
 import * as util from 'util'
 
 import { csv } from '../index'
 import { prompt, promptForAnswers, numericSort, runCommand } from './util'
+
+export enum ResourceProcessorSource {
+    All = 'all',
+    Unprocessed = 'unprocessed',
+    Modified = 'modified'
+}
 
 const DWC_FIELDS: string[] = [
     'scientificNameID',
@@ -83,11 +89,22 @@ function runGnverifier (names: string): Promise<string> {
     })
 }
 
+async function listFiles (directory: string): Promise<string[]> {
+    const input = await fs.readdir(directory)
+    return input.map(file => path.basename(file, '.txt')).sort(numericSort)
+}
+
+async function listUnprocessedFiles (directory: string, outputDirectory: string): Promise<string[]> {
+    const input = await listFiles(directory)
+    const output = new Set(await fs.readdir(outputDirectory))
+    return input.filter(file => output.has(file + '-1'))
+}
+
 async function listChangedFiles (directory: string): Promise<string[]> {
     const output = await runCommand('git', ['diff', '--name-only', 'HEAD', '--', directory], {
         cwd: directory
     })
-    return output.trimEnd().split('\n').sort(numericSort)
+    return output.trimEnd().split('\n').map(file => path.basename(file, '.txt')).sort(numericSort)
 }
 
 async function getOldFile (file: string): Promise<string> {
@@ -111,45 +128,28 @@ class ResourceProcessor {
         this.FILE_PROBLEMS = path.join(this.DIR_ROOT, 'problems.csv')
     }
 
-    async run (): Promise<void> {
-        const input = await fs.readdir(this.DIR_TXT)
-        const output = await fs.readdir(this.DIR_DWC)
-
-        const ids = input
-            .map(file => path.basename(file, '.txt'))
-            .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)))
-
+    async run (source: ResourceProcessorSource, config: ResourceProcessorConfig): Promise<void> {
+        const ids = await this.listWorks(source)
         for (const id of ids) {
-            // Skip existing files
-            if (output.some(file => file.startsWith(id + '-'))) {
-                continue
-            }
-
-            await this.processWork(id)
+            await this.processWork(id, config)
         }
     }
 
-    async runUpdate (): Promise<void> {
-        for (const file of await listChangedFiles(this.DIR_TXT)) {
-            const id = path.basename(file, '.txt')
-            await this.processWork(id, true)
+    async listWorks (source: ResourceProcessorSource): Promise<string[]> {
+        switch (source) {
+            case ResourceProcessorSource.All:
+                return listFiles(this.DIR_TXT)
+            case ResourceProcessorSource.Unprocessed:
+                return listUnprocessedFiles(this.DIR_TXT, this.DIR_DWC)
+            case ResourceProcessorSource.Modified:
+                return listChangedFiles(this.DIR_TXT)
+            default:
+                return []
         }
     }
 
-    async runMappingsUpdate (): Promise<void> {
-        const input = await fs.readdir(this.DIR_TXT)
-
-        const ids = input
-            .map(file => path.basename(file, '.txt'))
-            .sort((a, b) => parseInt(a.slice(1)) - parseInt(b.slice(1)))
-
-        for (const id of ids) {
-            await this.processWork(id, true)
-        }
-    }
-
-    async processWork (id: WorkId, update?: boolean): Promise<void> {
-        const resources = await this.processResources(id, update)
+    async processWork (id: WorkId, config: ResourceProcessorConfig): Promise<void> {
+        const resources = await this.processResources(id, config)
 
         await Promise.all(resources.map(resource => {
             const header = DWC_FIELDS
@@ -164,12 +164,12 @@ class ResourceProcessor {
         }))
     }
 
-    async processResources (id: WorkId, update?: boolean): Promise<AmendedResource[]> {
-        const resources = await this.processResourceText(id, update)
+    async processResources (id: WorkId, config: ResourceProcessorConfig): Promise<AmendedResource[]> {
+        const resources = await this.processResourceText(id, config)
 
         const amendedResources = []
         for (const resource of resources) {
-            const results = await this.processResourceDwc(resource)
+            const results = await this.processResourceDwc(resource, config)
 
             const skip = await this.shouldBeSkipped(resource.id)
 
@@ -198,7 +198,7 @@ class ResourceProcessor {
                         case 'r':
                         case 'R': {
                             console.log(`${resource.workId}: retrying ${resource.id}`)
-                            return this.processResources(id, update)
+                            return this.processResources(id, config)
                         }
                     }
                 }
@@ -210,14 +210,14 @@ class ResourceProcessor {
         return amendedResources
     }
 
-    async processResourceText (id: WorkId, update?: boolean): Promise<Resource[]> {
+    async processResourceText (id: WorkId, config: ResourceProcessorConfig): Promise<Resource[]> {
         try {
             console.log(`${id}: generating Darwin Core`)
             const filePath = path.join(this.DIR_TXT, id + '.txt')
             const file = await fs.readFile(filePath, 'utf-8')
 
             let old = undefined
-            if (update) {
+            if (config.update) {
                 const dwc = []
                 for (const file of await fs.readdir(this.DIR_DWC)) {
                     if (file.startsWith(id + '-')) {
@@ -243,12 +243,33 @@ class ResourceProcessor {
                 }
             }
 
-            return this.processResourceText(id, update)
+            return this.processResourceText(id, config)
         }
     }
 
-    async processResourceDwc (resource: Resource): Promise<AmendedResource> {
+    async processResourceDwc (resource: Resource, config: ResourceProcessorConfig): Promise<AmendedResource> {
         console.log(`${resource.workId}: matching ${resource.id}`)
+
+        if (!config.updateMappings) {
+            const file = path.join(this.DIR_DWC, resource.file + '.csv')
+            if (doesFileExist(file)) {
+                const [header, ...rows] = csv.parseCsv(await fs.readFile(file, 'utf-8'))
+                for (const row of rows) {
+                    const oldTaxon = row.reduce((taxon, value, index) => {
+                        taxon[header[index]] = value
+                        return taxon
+                    }, {} as Record<string, string>)
+                    const taxon = resource.taxa[oldTaxon.scientificNameID] as AmendedTaxon
+                    if (taxon) {
+                        taxon.colTaxonID = oldTaxon.colTaxonID
+                        taxon.colAcceptedTaxonID = oldTaxon.colAcceptedTaxonID
+                        taxon.gbifTaxonID = oldTaxon.gbifTaxonID
+                        taxon.gbifAcceptedTaxonID = oldTaxon.gbifAcceptedTaxonID
+                    }
+                }
+            }
+            return resource as AmendedResource
+        }
 
         const filteredResults: Record<TaxonId, TaxonMatch[]> = {}
         const taxonNames: Record<string, TaxonId[]> = {}
@@ -429,12 +450,14 @@ class ResourceProcessor {
 function main (): void {
     const args = util.parseArgs({
         options: {
-            update: {
-                type: 'boolean',
-                short: 'u'
+            source: {
+                type: 'string',
+                short: 's',
+                default: 'unprocessed'
             },
-            'update-mappings': {
-                type: 'boolean'
+            'keep-mappings': {
+                type: 'boolean',
+                short: 'k'
             }
         },
         allowPositionals: true
@@ -445,16 +468,13 @@ function main (): void {
         process.stdout.write('\n')
     })
 
-    let task
-    if (args.values.update) {
-        task = processor.runUpdate()
-    } else if (args.values['update-mappings']) {
-        task = processor.runMappingsUpdate()
-    } else {
-        task = processor.run()
+    const source = args.values.source as ResourceProcessorSource
+    const config: ResourceProcessorConfig = {
+        update: source !== 'unprocessed',
+        updateMappings: !args.values['keep-mappings']
     }
 
-    task.catch(error => {
+    processor.run(source, config).catch(error => {
         console.error(error)
         process.exit(1)
     })
