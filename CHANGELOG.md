@@ -19,11 +19,13 @@
 
 ### BREAKING CHANGES
 
-* **resources:** - "intragenericEpithet" is now "infragenericEpithet"
-- "intraspecificEpithet" is now "infraspecificEpithet"
+* **resources:**
+  - "intragenericEpithet" is now "infragenericEpithet"
+  - "intraspecificEpithet" is now "infraspecificEpithet"
 * **resources:** Adds additional column, between "higherClassification" and "colTaxonID".
-* **resources:** - Instead of "-u, --update" use "-s modified"
-- Instead of "--update-mapping" use "-s all"
+* **resources:**
+  - Instead of "-u, --update" use "-s modified"
+  - Instead of "--update-mapping" use "-s all"
 * **resources:** Index will no longer contain "scope" array. "scope" field in YAML header
 does no longer pass validation. Use the "taxon_scope" and "scope" fields
 in "catalog" instead.
