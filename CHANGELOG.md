@@ -1,3 +1,35 @@
+# [0.5.0](https://github.com/identification-resources/formica/compare/v0.4.3...v0.5.0) (2023-10-24)
+
+
+### Bug Fixes
+
+* **catalog:** make validation more robust ([522db8a](https://github.com/identification-resources/formica/commit/522db8ad428c2d4645569a7f541fd203f5d628e8))
+* **csv:** fix csv formatting ([064e5e5](https://github.com/identification-resources/formica/commit/064e5e57b2a642d22850501ab2a0b95879779b85))
+* **resources:** do not count abbreviations as species ([ac0cc5a](https://github.com/identification-resources/formica/commit/ac0cc5a7cfd1f68df9b8d1d1c543a2f593839daa))
+* **resources:** fix typos in output column names ([0d02823](https://github.com/identification-resources/formica/commit/0d0282378b21e92fbe028a53a9d121f42e791cc5))
+
+
+### Features
+
+* **resources:** encode names with spaces with underscores ([9c7efd4](https://github.com/identification-resources/formica/commit/9c7efd4daf80660be98f2fec8ef9faa5d5b42d67))
+* **resources:** include verbatimIdentification column ([4a2e920](https://github.com/identification-resources/formica/commit/4a2e9201467347e900f5690d2301a3b231ded822))
+* **resources:** move "scope" metadata to "catalog" ([286c5b2](https://github.com/identification-resources/formica/commit/286c5b223ce41336f3ebd63c1797403aad21aef6))
+* **resources:** update processor configuration ([64daa26](https://github.com/identification-resources/formica/commit/64daa26d70c96df24298c7b78f2b93ef0f5b2a48))
+
+
+### BREAKING CHANGES
+
+* **resources:** - "intragenericEpithet" is now "infragenericEpithet"
+- "intraspecificEpithet" is now "infraspecificEpithet"
+* **resources:** Adds additional column, between "higherClassification" and "colTaxonID".
+* **resources:** - Instead of "-u, --update" use "-s modified"
+- Instead of "--update-mapping" use "-s all"
+* **resources:** Index will no longer contain "scope" array. "scope" field in YAML header
+does no longer pass validation. Use the "taxon_scope" and "scope" fields
+in "catalog" instead.
+
+
+
 ## [0.4.3](https://github.com/identification-resources/formica/compare/v0.4.2...v0.4.3) (2023-09-30)
 
 
