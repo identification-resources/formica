@@ -42,6 +42,7 @@ const DWC_FIELDS: string[] = [
     'genus',
     'subgenus',
     'higherClassification',
+    'verbatimIdentification',
 
     'colTaxonID',
     'gbifTaxonID',

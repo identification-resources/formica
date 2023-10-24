@@ -55,6 +55,7 @@ interface WorkingTaxon {
     genus?: string,
     subgenus?: string,
     higherClassification?: string,
+    verbatimIdentification?: string,
 
     // Non-standard
     scientificNameOnly?: string,
@@ -66,7 +67,8 @@ interface Taxon extends WorkingTaxon {
     scientificName: string,
     taxonRank: Rank,
     collectionCode: ResourceId,
-    taxonomicStatus: string
+    taxonomicStatus: string,
+    verbatimIdentification: string
 }
 
 interface ResourceMetadata {

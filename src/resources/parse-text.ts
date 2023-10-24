@@ -179,6 +179,9 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
         name = name.replace(/^\[(_|\d+)\] /, '')
     }
 
+    // Set verbatim identification after subsequent syntax is removed.
+    item.verbatimIdentification = name
+
     // Parent context is used for parsing and formatting binomial names.
     // For formatting, it needs to match external databases (i.e. be correct).
     // For parsing, it needs to match the current file. If relevant parents
