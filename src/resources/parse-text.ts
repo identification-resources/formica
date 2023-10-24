@@ -180,48 +180,63 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     }
 
     // Parent context is used for parsing and formatting binomial names.
-    const parentContext = { ...parent }
-    if (parent.incorrect) { parentContext.incorrect = { ...parent.incorrect } }
+    // For formatting, it needs to match external databases (i.e. be correct).
+    // For parsing, it needs to match the current file. If relevant parents
+    // (i.e. genus, species) had mistakes that were corrected, the uncorrected
+    // genus and species names need to be used.
+    const parentContext = {
+        genus: parent.genus,
+        subgenus: parent.subgenus,
+        specificEpithet: parent.specificEpithet,
+        incorrect: {
+            genus: parent.incorrect && parent.incorrect.genus,
+            specificEpithet: parent.incorrect && parent.incorrect.specificEpithet
+        }
+    }
 
-    // The parent context should be amended in the two cases where binomial names
-    // are truly accepted: synonyms and species (and below) without parents (resp.
-    // genera and genera and species) to provide parts of the name.
+    // Both contexts should be amended in the two cases where binomial names
+    // are fully used: (1) synonyms and (2) multinomial taxa without parents to
+    // provide parts of the name (e.g. bare species without a genus parent, or
+    // even subspecies without a species or genus parent).
     if (isSynonym || !parentContext.genus || (compareRanks('species', rank) < 0 && !parentContext.specificEpithet)) {
         const [, genus, subgenus, species] = name.match(BINAME_PATTERN) || []
         if (genus) {
-            parentContext.genus = capitalize(genus)
-            if (parentContext.incorrect) parentContext.incorrect.genus = capitalize(genus)
+            parentContext.genus = parentContext.incorrect.genus = capitalize(genus)
         }
         if (subgenus) {
             parentContext.subgenus = capitalize(subgenus)
-            if (parentContext.incorrect) parentContext.incorrect.subgenus = capitalize(subgenus)
         } else if (genus) {
-            // If a genus is given but no subgenus, remove it from the parent context
+            // If a genus is given but no subgenus, remove any existing subgenus
+            // from the parent context.
             delete parentContext.subgenus
-            if (parentContext.incorrect) delete parentContext.incorrect.subgenus
         }
         if (species) {
-            parentContext.specificEpithet = species
-            if (parentContext.incorrect) parentContext.incorrect.specificEpithet = species
+            parentContext.specificEpithet = parentContext.incorrect.specificEpithet = species
         }
     }
 
     // In taxa of group, species or lower, the name should just contain the
-    // (inter)specific epithet and the author information & remarks when processing
+    // (intra)specific epithet and the author information & remarks when processing
     // further.
     if (compareRanks('group', rank) <= 0) {
-        const parseContext = parentContext.incorrect || parentContext
-        if (!parseContext.genus) { parseContext.genus = name.split(' ', 1)[0] }
-        const genusPrefix = new RegExp(`^${parentContext.genus} (\\(.*?\\) )?`, 'i')
-        if (name[0] === (parentContext.genus as string)[0]) {
-            name = name.replace(genusPrefix, '')
+        // Remove genus
+        const genus = parentContext.incorrect.genus || parentContext.genus || ''
+        if (name[0] === genus[0] && name.toLowerCase().startsWith(genus.toLowerCase() + ' ')) {
+            name = name.slice(genus.length + 1)
         }
 
+        // Remove subgenus
+        name = name.replace(/^\(.*?\) /, '')
+
+        // Intraspecific taxa
         if (compareRanks('species', rank) < 0) {
-            const speciesPrefix = parseContext.specificEpithet + ' '
-            if (name.startsWith(speciesPrefix)) {
-                name = name.slice(speciesPrefix.length)
+            // Remove specific epithet
+            const species = parentContext.incorrect.specificEpithet || parentContext.specificEpithet || ''
+            if (name.startsWith(species + ' ')) {
+                name = name.slice(species.length + 1)
             }
+
+            // Remove rank abbreviations
             name = name.replace(/^(st|r|ab|f|var|ssp|subsp)\. /, '')
         }
     }
