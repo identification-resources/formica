@@ -252,6 +252,13 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     if (!nameParts) {
         throw new Error(`Taxon "${name}" could not be parsed`)
     }
+
+    // To encode old names with spaces (e.g. "Orsillus pini canariensis Lindberg, 1953")
+    // underscores are used, which are replaced here.
+    if (nameParts[1].includes('_')) {
+        nameParts[1] = nameParts[1].replace(/_/g, ' ')
+    }
+
     const [_, taxon, citation = '', notes] = nameParts
     item.scientificNameAuthorship = capitalizeAuthors(citation)
     item.taxonRemarks = notes
