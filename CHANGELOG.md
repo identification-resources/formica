@@ -1,3 +1,12 @@
+## [0.5.1](https://github.com/identification-resources/formica/compare/v0.5.0...v0.5.1) (2023-11-03)
+
+
+### Bug Fixes
+
+* **resources:** fix file listing in processor ([009b980](https://github.com/identification-resources/formica/commit/009b98091b0f597e91213ace82252facbe3b5fed))
+
+
+
 # [0.5.0](https://github.com/identification-resources/formica/compare/v0.4.3...v0.5.0) (2023-10-24)
 
 
@@ -19,13 +28,11 @@
 
 ### BREAKING CHANGES
 
-* **resources:**
-  - "intragenericEpithet" is now "infragenericEpithet"
-  - "intraspecificEpithet" is now "infraspecificEpithet"
+* **resources:** - "intragenericEpithet" is now "infragenericEpithet"
+- "intraspecificEpithet" is now "infraspecificEpithet"
 * **resources:** Adds additional column, between "higherClassification" and "colTaxonID".
-* **resources:**
-  - Instead of "-u, --update" use "-s modified"
-  - Instead of "--update-mapping" use "-s all"
+* **resources:** - Instead of "-u, --update" use "-s modified"
+- Instead of "--update-mapping" use "-s all"
 * **resources:** Index will no longer contain "scope" array. "scope" field in YAML header
 does no longer pass validation. Use the "taxon_scope" and "scope" fields
 in "catalog" instead.
