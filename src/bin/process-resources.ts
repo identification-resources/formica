@@ -98,7 +98,7 @@ async function listFiles (directory: string): Promise<string[]> {
 async function listUnprocessedFiles (directory: string, outputDirectory: string): Promise<string[]> {
     const input = await listFiles(directory)
     const output = new Set(await fs.readdir(outputDirectory))
-    return input.filter(file => output.has(file + '-1'))
+    return input.filter(file => !output.has(file + '-1.csv'))
 }
 
 async function listChangedFiles (directory: string): Promise<string[]> {
