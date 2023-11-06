@@ -54,13 +54,15 @@ async function main (args: string[]): Promise<void> {
                 return
             }
 
-            const [_header, ...dwc] = csv.parseCsv(await fs.readFile(dwcFile, 'utf-8'))
+            const [header, ...dwc] = csv.parseCsv(await fs.readFile(dwcFile, 'utf-8'))
+            const gbifColumn = header.indexOf('gbifTaxonID')
+            const gbifAcceptedColumn = header.indexOf('gbifAcceptedTaxonID')
             for (const taxon of dwc) {
-                const gbifId = taxon[25]
+                const gbifId = taxon[gbifColumn]
                 if (gbifId) {
                     addTaxon(gbifIndex, gbifId, taxon)
-                    if (taxon[27] !== taxon[25]) {
-                        addTaxon(gbifIndex, taxon[27], taxon)
+                    if (taxon[gbifAcceptedColumn] !== taxon[gbifColumn]) {
+                        addTaxon(gbifIndex, taxon[gbifAcceptedColumn], taxon)
                     }
                 }
                 amendedResource.taxonCount += 1
