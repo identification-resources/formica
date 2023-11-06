@@ -3,7 +3,17 @@
 **Formica** is an SDK and a collection of tools for the data in the Library of
 Identification Resources.
 
-## Tools
+## Install
+
+Install globally:
+
+    npm install --global @larsgw/formica
+
+Run locally:
+
+    npx --package @larsgw/formica -- ...
+
+## CLI
 
   - `loir-validate-catalog [./catalog.csv ./authors.csv ./places.csv ./publishers.csv]`:
     Validate the CSV files containing metadata ([schema](https://github.com/identification-resources/catalog/blob/main/docs/tools-resources.md)).
@@ -17,3 +27,12 @@ Identification Resources.
     `--update` flag in a Git repo to update existing Darwin Core files while keeping
     the identifiers stable (in most cases).
   - `loir-resources-index [./resources]`: Create indices of the Darwin Core archives.
+
+## API
+
+```js
+const Formica = require('@larsgw/formica')
+
+// Load catalog data
+const catalog = Formica.catalog.loadData(`...`, 'catalog')
+```
