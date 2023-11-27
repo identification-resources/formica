@@ -1,3 +1,12 @@
+## [0.5.2](https://github.com/identification-resources/formica/compare/v0.5.1...v0.5.2) (2023-11-27)
+
+
+### Bug Fixes
+
+* **resources:** fix GBIF index generation ([c88e2d2](https://github.com/identification-resources/formica/commit/c88e2d2b306b930ca0b00b978e3eb89b8adfb656))
+
+
+
 ## [0.5.1](https://github.com/identification-resources/formica/compare/v0.5.0...v0.5.1) (2023-11-03)
 
 
