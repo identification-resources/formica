@@ -6,8 +6,8 @@ import ietfTagListFactory = require('ietf-language-tag-regex')
 const ietfTagList = ietfTagListFactory()
 
 export const FORMATS = {
-    ENTRY_TYPE: ['print', 'online', 'cd'],
-    KEY_TYPE: ['key', 'matrix', 'reference', 'gallery', 'checklist', 'supplement', 'collection'],
+    ENTRY_TYPE: ['print', 'online', 'cd', 'application'],
+    KEY_TYPE: ['key', 'matrix', 'reference', 'gallery', 'checklist', 'supplement', 'collection', 'algorithm'],
     COMPLETE: ['TRUE', 'FALSE'],
 
     ID: /^B\d+$/,
