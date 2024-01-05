@@ -1,3 +1,12 @@
+# [0.6.0](https://github.com/identification-resources/formica/compare/v0.5.2...v0.6.0) (2024-01-05)
+
+
+### Features
+
+* **catalog:** add entry type, key type values ([ed6e4fb](https://github.com/identification-resources/formica/commit/ed6e4fb545e09cddb5d466f602bffb8a8483f043))
+
+
+
 ## [0.5.2](https://github.com/identification-resources/formica/compare/v0.5.1...v0.5.2) (2023-11-27)
 
 
