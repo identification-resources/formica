@@ -245,8 +245,8 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     }
 
     // Hybrids
-    if (rank === 'species' && /^x /.test(name)) {
-        name = '\u00D7' + name.slice(2)
+    if (rank === 'species' && /(^| )x /.test(name)) {
+        name = name.replace(/(^| )x /, '\u00D7')
     }
 
     // Divide the name into the main scientific name (only the epithet for taxa

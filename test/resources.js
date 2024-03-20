@@ -124,4 +124,16 @@ Microdynerus Thomson, 1874
 `, 'T1')
         assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Microdynerus microdynerus (Dalla Torre, 1889)')
     })
+
+    await t.test('parses hybrids', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [species]
+---
+
+Rumex conglomeratus x maritimus
+Tilia x vulgaris
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Rumex conglomeratus×maritimus')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Tilia ×vulgaris')
+    })
 })
