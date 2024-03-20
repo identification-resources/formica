@@ -1,3 +1,12 @@
+## [0.6.1](https://github.com/identification-resources/formica/compare/v0.6.0...v0.6.1) (2024-03-20)
+
+
+### Bug Fixes
+
+* **resources:** allow two-part hybrid names ([8e3b836](https://github.com/identification-resources/formica/commit/8e3b8368985d1db35b62d306d833121150e91865))
+
+
+
 # [0.6.0](https://github.com/identification-resources/formica/compare/v0.5.2...v0.6.0) (2024-01-05)
 
 
