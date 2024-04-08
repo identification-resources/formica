@@ -50,7 +50,7 @@ export class Entities {
         if (this.entities.length === 0) {
             return [[]]
         }
-        const header = Object.keys(this.entities[0].fields)
+        const header = Object.keys(this.entities[0].schema)
         const table = this.entities.map((entity: Entity) => {
             return header.map((field: string): string => {
                 const value = entity.get(field) || ''
