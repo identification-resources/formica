@@ -13,7 +13,7 @@ function getTypeInfo (type: string): [typeof Entity, string] {
     }
 }
 
-export { Entities, Entity }
+export { Entities, Entity, getTypeInfo }
 
 export function loadData (file: string, type: string): Entities {
     const [subClass, indexField] = getTypeInfo(type)
