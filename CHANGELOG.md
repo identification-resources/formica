@@ -1,3 +1,17 @@
+## [0.6.2](https://github.com/identification-resources/formica/compare/v0.6.1...v0.6.2) (2024-04-08)
+
+
+### Bug Fixes
+
+* **catalog:** include all fields in tabular export ([c4e47bb](https://github.com/identification-resources/formica/commit/c4e47bbdf31c8f589e35c897c8207eb4dd979461))
+
+
+### Features
+
+* **catalog:** add script to de-duplicate links ([b719348](https://github.com/identification-resources/formica/commit/b719348635e1b35ee80758c0cdd9938625d79ebf))
+
+
+
 ## [0.6.1](https://github.com/identification-resources/formica/compare/v0.6.0...v0.6.1) (2024-03-20)
 
 
