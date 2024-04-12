@@ -3,6 +3,7 @@ import { Work } from '../catalog/tables/work'
 import { createDiff, ResourceDiffType } from './diff-resource'
 
 const RANKS: Rank[] = [
+    'phylum',
     'class',
     'infraclass',
     'superorder',
