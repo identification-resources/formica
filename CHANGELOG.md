@@ -1,3 +1,12 @@
+## [0.6.3](https://github.com/identification-resources/formica/compare/v0.6.2...v0.6.3) (2024-04-12)
+
+
+### Bug Fixes
+
+* **resources:** allow 'phylum' rank ([ff9be66](https://github.com/identification-resources/formica/commit/ff9be66abab79a86263764b54d6a2709833b14d4))
+
+
+
 ## [0.6.2](https://github.com/identification-resources/formica/compare/v0.6.1...v0.6.2) (2024-04-08)
 
 
