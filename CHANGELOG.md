@@ -1,3 +1,12 @@
+## [0.6.4](https://github.com/identification-resources/formica/compare/v0.6.3...v0.6.4) (2024-12-16)
+
+
+### Bug Fixes
+
+* **resources:** fix matching of some ICBN names ([3c18458](https://github.com/identification-resources/formica/commit/3c184586b64e2a31f1eb7298bcd7c80c1d119069))
+
+
+
 ## [0.6.3](https://github.com/identification-resources/formica/compare/v0.6.2...v0.6.3) (2024-04-12)
 
 
