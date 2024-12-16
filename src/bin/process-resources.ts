@@ -287,6 +287,22 @@ class ResourceProcessor {
 
         const result = await runGnverifier(Array.from(names).join('\n'))
         for (const results of result.trim().split('\n')) {
+            interface MatchScoreDetails {
+                cardinalityScore: number;
+            }
+
+            interface Match {
+                currentRecordId: string;
+                dataSourceId: number;
+                matchedName: string;
+                recordId: string;
+                sortScore: number;
+                isSynonym: boolean;
+                classificationPath: string;
+                classificationRanks: string;
+                scoreDetails: MatchScoreDetails;
+            }
+
             const { name, results: matches } = JSON.parse(results)
 
             if (!matches) {
@@ -294,7 +310,7 @@ class ResourceProcessor {
             }
 
             // Fix author scoring for some species, see https://github.com/gnames/gnverifier/issues/129
-            matches.sort((a: Record<string, any>, b: Record<string, any>) => {
+            matches.sort((a: Match, b: Match) => {
                 if (a.sortScore !== b.sortScore) {
                     return b.sortScore - a.sortScore
                 }
@@ -302,7 +318,7 @@ class ResourceProcessor {
                 return name === a.matchedName ? -1 : name === b.matchedName ? 1 : 0
             })
 
-            for (const match of matches) {
+            for (const match of matches as Match[]) {
                 const source = match.dataSourceId
                 const currentRank = match.classificationRanks.split('|').pop()
 
