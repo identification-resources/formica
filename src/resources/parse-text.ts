@@ -573,6 +573,8 @@ export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Res
         let diff
         if (oldResources[index]) {
             diff = createDiff(content, parseResource(oldResources[index])[1])
+            // Ignore empty lines
+            diff = diff.filter(line => line.text !== '')
         } else {
             diff = createDiff(content, content)
         }
