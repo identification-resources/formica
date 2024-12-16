@@ -293,6 +293,15 @@ class ResourceProcessor {
                 continue
             }
 
+            // Fix author scoring for some species, see https://github.com/gnames/gnverifier/issues/129
+            matches.sort((a: Record<string, any>, b: Record<string, any>) => {
+                if (a.sortScore !== b.sortScore) {
+                    return b.sortScore - a.sortScore
+                }
+
+                return name === a.matchedName ? -1 : name === b.matchedName ? 1 : 0
+            })
+
             for (const match of matches) {
                 const source = match.dataSourceId
                 const currentRank = match.classificationRanks.split('|').pop()
