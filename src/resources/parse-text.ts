@@ -87,6 +87,18 @@ const RANK_LABELS_REVERSE: Record<string, Rank> = {
     'subsp': 'subspecies'
 }
 
+/**
+ *   1. Any number of
+ *      - capitalized words
+ *      - "&"
+ *      - " in "
+ *      - " ex "
+ *      - lowercase name particles
+ *   2. Followed by a capitalized word
+ */
+const LOWERCASE_NAME_PARTICLES = ['y', 'der', 'den', 'de', 'van'].join('|')
+const SIMPLE_AUTHOR_PATTERN = '(?:(?:\\p{Lu}\\S*|&|in|ex|' + LOWERCASE_NAME_PARTICLES + ')\\s*)*\\p{Lu}\\S+'
+
 const NAME_PATTERN = new RegExp(
     '^' +
         // $1 main name part
@@ -96,20 +108,14 @@ const NAME_PATTERN = new RegExp(
             // but not auct(t)., etc.
             '(?!auctt?\\.|(?:syn|comb|sp|spec)\\. n(?:ov)?\\.|s(?:ens[.u]|\\.))' +
         '(' +
-            // $2.1 anything in parentheses
-            '\\(.+?\\)' +
+            // $2.1 anything in parentheses, followed by optional revising author(s)
+            '\\(.+?\\)(?:\\s+' + SIMPLE_AUTHOR_PATTERN + ')?' +
         '|' +
             // $2.2 anything followed by a year
             '.+?\\d{4}\\)?' +
         '|' +
-            // $2.3 name(, name)* & name
-            '.+(?:, .+)* & \\S+' +
-        '|' +
-            // $2.4 name y name
-            '\\S+ [yY] \\S+' +
-        '|' +
-            // $2.5 name( in name)
-            '\\p{Lu}\\S*(?: in \\S+)?' +
+            // $2.3 author(s)
+            SIMPLE_AUTHOR_PATTERN +
         '))?' +
         // $3 optional notes
         '(?:,? (.+))?' +
