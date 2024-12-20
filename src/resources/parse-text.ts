@@ -95,9 +95,10 @@ const RANK_LABELS_REVERSE: Record<string, Rank> = {
  *      - " ex "
  *      - lowercase name particles
  *   2. Followed by a capitalized word
+ *   3. Optionally, followed by "et al."
  */
 const LOWERCASE_NAME_PARTICLES = ['y', 'der', 'den', 'de', 'van'].join('|')
-const SIMPLE_AUTHOR_PATTERN = '(?:(?:\\p{Lu}\\S*|&|in|ex|' + LOWERCASE_NAME_PARTICLES + ')\\s*)*\\p{Lu}\\S+'
+const SIMPLE_AUTHOR_PATTERN = '(?:(?:\\p{Lu}\\S*|&|in|ex|' + LOWERCASE_NAME_PARTICLES + ')\\s*)*\\p{Lu}\\S+(?:\\s+et\\s+al\\.)?'
 
 const NAME_PATTERN = new RegExp(
     '^' +
