@@ -1,3 +1,14 @@
+## [0.6.5](https://github.com/identification-resources/formica/compare/v0.6.4...v0.6.5) (2024-12-20)
+
+
+### Bug Fixes
+
+* **resources:** ignore empty lines in diff mode ([3fb027e](https://github.com/identification-resources/formica/commit/3fb027e8968196910fff2e574e700ac0abee996c))
+* **resources:** improve (ICBN) author parsing ([d3e3faf](https://github.com/identification-resources/formica/commit/d3e3faf411d1a7dccd528a5ee78bd0823a5883b4)), closes [#13](https://github.com/identification-resources/formica/issues/13) [#14](https://github.com/identification-resources/formica/issues/14)
+* **resources:** support "et al." in author name ([82993bf](https://github.com/identification-resources/formica/commit/82993bffac5e7f3ed00d00c28c836f347b264a43))
+
+
+
 ## [0.6.4](https://github.com/identification-resources/formica/compare/v0.6.3...v0.6.4) (2024-12-16)
 
 
