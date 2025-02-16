@@ -1,5 +1,5 @@
 import * as yaml from 'js-yaml'
-import { Work } from '../catalog/tables/work'
+import { WorkResource } from './resource'
 import { createDiff, ResourceDiffType } from './diff-resource'
 
 const RANKS: Rank[] = [
@@ -394,6 +394,9 @@ function parseHeader (header: string): ResourceMetadata {
 
     if ('catalog' in config && typeof config.catalog === 'object' && config.catalog !== null) {
         const catalog: Record<string, string> = {}
+        if ('id' in config.catalog) {
+            throw new SyntaxError('"catalog" should not contain id')
+        }
         for (const key in config.catalog) {
             const value = config.catalog[key as keyof object]
             if (typeof value === 'number') {
@@ -404,7 +407,7 @@ function parseHeader (header: string): ResourceMetadata {
                 throw new SyntaxError(`"catalog" should contain only strings ("${key}")`)
             }
         }
-        const work = new Work(catalog)
+        const work = new WorkResource(catalog)
         const errors = work.validate().filter(({ error }) => error !== 'Value(s) required but missing')
         if (errors.length > 0) {
             throw new SyntaxError(`"catalog" contains errors: ${errors.map(({ field, error }) => `[${field}] ${error}`).join('; ')}`)
