@@ -1,3 +1,12 @@
+## [0.6.6](https://github.com/identification-resources/formica/compare/v0.6.5...v0.6.6) (2025-02-16)
+
+
+### Features
+
+* **resources:** allow other resources in version_of ([85947b0](https://github.com/identification-resources/formica/commit/85947b0dcfbdb4bfd6537c628b34087a6e6326f7))
+
+
+
 ## [0.6.5](https://github.com/identification-resources/formica/compare/v0.6.4...v0.6.5) (2024-12-20)
 
 
