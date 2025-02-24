@@ -342,19 +342,6 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
         item.scientificName += ` ${item.scientificNameAuthorship}`
     }
 
-    // Amend "parent" with corrections
-    if (item.taxonomicStatus === 'incorrect') {
-        const itemAsObject = item as { [index: string]: unknown }
-        const parentAsObject = parent as { [index: string]: unknown }
-
-        parent.incorrect = { ...parent }
-        for (const key in item) {
-            if (key !== 'taxonomicStatus') {
-                parentAsObject[key] = itemAsObject[key]
-            }
-        }
-    }
-
     return item
 }
 
@@ -510,29 +497,10 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         const item = parseName(name, rank, parent)
         const isSynonym = item.taxonomicStatus !== 'accepted'
 
-        if (item.taxonomicStatus === 'incorrect') {
-            continue
-        }
-
-        if (type === ResourceDiffType.Added) {
-            newIdOffset++
-            item.scientificNameID = idBase + newIdOffset.toString()
-        } else {
-            id++
-            item.scientificNameID = idBase + (oldIds[id - 1] || id).toString()
-        }
-        previousId = item.scientificNameID
-
-        item.parentNameUsageID = isSynonym ? undefined : parent.scientificNameID
-        item.parentNameUsage = isSynonym ? undefined : parent.scientificName
-        item.acceptedNameUsageID = isSynonym ? parent.scientificNameID : undefined
-        item.acceptedNameUsage = isSynonym ? parent.scientificName : undefined
-        item.collectionCode = idBase.slice(0, -1)
-
+        // Add higher classification info
+        const itemAsObject = item as { [index: string]: unknown }
+        const parentAsObject = parent as { [index: string]: unknown }
         for (const rank of DWC_RANKS) {
-            const itemAsObject = item as { [index: string]: unknown }
-            const parentAsObject = parent as { [index: string]: unknown }
-
             itemAsObject[rank] = undefined
             if (parentAsObject[rank]) {
                 itemAsObject[rank] = parentAsObject[rank]
@@ -556,6 +524,33 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         } else if (parentId) {
             item.higherClassification = parent.scientificNameOnly
         }
+
+        // Amend "parent" with corrections
+        if (item.taxonomicStatus === 'incorrect') {
+            parent.incorrect = { ...parent }
+            for (const key in item) {
+                if (key !== 'taxonomicStatus') {
+                    parentAsObject[key] = itemAsObject[key]
+                }
+            }
+            continue
+        }
+
+        // Set identifiers
+        if (type === ResourceDiffType.Added) {
+            newIdOffset++
+            item.scientificNameID = idBase + newIdOffset.toString()
+        } else {
+            id++
+            item.scientificNameID = idBase + (oldIds[id - 1] || id).toString()
+        }
+        previousId = item.scientificNameID
+
+        item.parentNameUsageID = isSynonym ? undefined : parent.scientificNameID
+        item.parentNameUsage = isSynonym ? undefined : parent.scientificName
+        item.acceptedNameUsageID = isSynonym ? parent.scientificNameID : undefined
+        item.acceptedNameUsage = isSynonym ? parent.scientificName : undefined
+        item.collectionCode = idBase.slice(0, -1)
 
         data[item.scientificNameID] = item
     }

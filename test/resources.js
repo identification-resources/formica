@@ -136,4 +136,17 @@ Tilia x vulgaris
         assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Rumex conglomeratus×maritimus')
         assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Tilia ×vulgaris')
     })
+
+    await t.test('outputs corrected generic names', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus, species]
+---
+
+Bogdania Kerzhner, 1964
+  > Bogdiana Kerzhner, 1964
+  myrmica Kerzhner, 1964
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Bogdiana Kerzhner, 1964')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Bogdiana myrmica Kerzhner, 1964')
+    })
 })
