@@ -175,7 +175,6 @@ class ResourceProcessor {
             const skip = await this.shouldBeSkipped(resource.id)
 
             if (!skip) {
-                // TODO const correct = checkResults(results, classifications)
                 const correct = this.checkResults(results)
                 if (!correct) {
                     const choice = await promptForAnswers(
