@@ -529,7 +529,7 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         if (item.taxonomicStatus === 'incorrect') {
             parent.incorrect = { ...parent }
             for (const key in item) {
-                if (key !== 'taxonomicStatus') {
+                if (key !== 'taxonomicStatus' && key !== 'verbatimIdentification') {
                     parentAsObject[key] = itemAsObject[key]
                 }
             }
