@@ -1,3 +1,19 @@
+## [0.6.7](https://github.com/identification-resources/formica/compare/v0.6.6...v0.6.7) (2025-02-26)
+
+
+### Bug Fixes
+
+* **resources:** keep uncorrected name in verbatimIdentification ([dc4d5d1](https://github.com/identification-resources/formica/commit/dc4d5d17e7a412a94538f6162dfd839d808cbc30))
+* **resources:** update heuristics for recognizing author citations ([bca6a7f](https://github.com/identification-resources/formica/commit/bca6a7f5a6c2dc3dc421d885f6270f5464fc5ea5))
+* **resources:** use corrected generic name in output ([b472384](https://github.com/identification-resources/formica/commit/b4723842e87515f076230c603246082bc3bbec9d))
+
+
+### Features
+
+* **resources:** add support for completeness flags ([55b5427](https://github.com/identification-resources/formica/commit/55b5427125b4f1072191cadbc461ba31d37e6f2e))
+
+
+
 ## [0.6.6](https://github.com/identification-resources/formica/compare/v0.6.5...v0.6.6) (2025-02-16)
 
 
