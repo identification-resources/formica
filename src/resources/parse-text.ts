@@ -54,6 +54,12 @@ const DWC_RANKS: DwcRank[] = [
     'subgenus'
 ]
 
+const FLAGS: ResourceFlag[] = [
+    'MISSING_TAXA',
+    'MISSING_PARENT_TAXA',
+    'MISSING_SYNONYMS'
+]
+
 const TAXONOMIC_STATUS: Record<string, TaxonStatus> = {
     '>': 'incorrect',
     '+': 'heterotypic synonym',
@@ -403,6 +409,19 @@ function parseHeader (header: string): ResourceMetadata {
         for (const key in work.fields) {
             metadata.catalog[key] = work.get(key) as Value
         }
+    }
+
+    if ('flags' in config) {
+        if (!Array.isArray(config.flags)) {
+            throw new SyntaxError('"flags" should be an array if present')
+        }
+
+        const invalidFlags = config.flags.filter(flag => !FLAGS.includes(flag))
+        if (invalidFlags.length) {
+            throw new SyntaxError(`"flags" contains invalid values: ${invalidFlags.join(', ')}`)
+        }
+
+        metadata.flags = config.flags
     }
 
     return metadata

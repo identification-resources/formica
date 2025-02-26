@@ -71,8 +71,11 @@ interface Taxon extends WorkingTaxon {
     verbatimIdentification: string
 }
 
+type ResourceFlag = string;
+
 interface ResourceMetadata {
     levels: Rank[],
+    flags?: ResourceFlag[],
     catalog?: Record<string, Value>
 }
 
