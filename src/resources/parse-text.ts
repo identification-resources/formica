@@ -103,7 +103,7 @@ const RANK_LABELS_REVERSE: Record<string, Rank> = {
  *   2. Followed by a capitalized word
  *   3. Optionally, followed by "et al."
  */
-const LOWERCASE_NAME_PARTICLES = ['y', 'der', 'den', 'de', 'van'].join('|')
+const LOWERCASE_NAME_PARTICLES = ['y', 'der', 'den', 'de', 'van', 'von'].join('|')
 const SIMPLE_AUTHOR_PATTERN = '(?:(?:\\p{Lu}\\S*|&|in|ex|' + LOWERCASE_NAME_PARTICLES + ')\\s*)*\\p{Lu}\\S+(?:\\s+et\\s+al\\.)?'
 
 const NAME_PATTERN = new RegExp(
@@ -113,7 +113,7 @@ const NAME_PATTERN = new RegExp(
         // $2 optional author citation
         '(?: ' +
             // but not auct(t)., etc.
-            '(?!auctt?\\.|(?:syn|comb|sp|spec)\\. n(?:ov)?\\.|s(?:ens[.u]|\\.))' +
+            '(?!auctt?\\.|(?:syn|comb|sp|spec|nom)\\. n(?:ov)?\\.|s(?:ens[.u]|\\.)|in part|partim)' +
         '(' +
             // $2.1 anything in parentheses, followed by optional revising author(s)
             '\\(.+?\\)(?:\\s+' + SIMPLE_AUTHOR_PATTERN + ')?' +
