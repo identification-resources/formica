@@ -11,15 +11,13 @@ interface AmendedResourceMetadata extends ResourceMetadata {
     taxonCount: number
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function sortObject (object: Record<string, any>): Record<string, any> {
-    const sorted: Record<string, any> = {}
+function sortObject (object: Record<string, unknown>): Record<string, unknown> {
+    const sorted: Record<string, unknown> = {}
     for (const key of Object.keys(object).sort(numericSort)) {
         sorted[key] = object[key]
     }
     return sorted
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 function addTaxon (gbifIndex: Record<string, TaxonId[]>, gbifId: string, taxon: string[]) {
     if (!(gbifId in gbifIndex)) {
