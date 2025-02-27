@@ -11,20 +11,25 @@ interface AmendedResourceMetadata extends ResourceMetadata {
     taxonCount: number
 }
 
-function sortObject (object: Record<string, unknown>): Record<string, unknown> {
+type SortObjectCallback = (a: string, b: string) => number
+function alphabeticSort (a: string, b: string): number {
+    return a > b ? 1 : a < b ? -1 : 0
+}
+
+function sortObject (object: Record<string, unknown>, sorter?: SortObjectCallback): Record<string, unknown> {
     const sorted: Record<string, unknown> = {}
-    for (const key of Object.keys(object).sort(numericSort)) {
+    for (const key of Object.keys(object).sort(sorter ?? numericSort)) {
         sorted[key] = object[key]
     }
     return sorted
 }
 
-function addTaxon (gbifIndex: Record<string, TaxonId[]>, gbifId: string, taxon: string[]) {
-    if (!(gbifId in gbifIndex)) {
-        gbifIndex[gbifId] = []
+function addTaxon (index: Record<string, TaxonId[]>, id: string, taxon: string[]) {
+    if (!(id in index)) {
+        index[id] = []
     }
-    gbifIndex[gbifId].push(taxon[0])
-    gbifIndex[gbifId].sort(numericSort)
+    index[id].push(taxon[0])
+    index[id].sort(numericSort)
 }
 
 async function main (args: string[]): Promise<void> {
@@ -33,6 +38,7 @@ async function main (args: string[]): Promise<void> {
     const files = await fs.readdir(path.join(REPO_ROOT, 'txt'))
 
     const gbifIndex: Record<string, TaxonId[]> = {}
+    const colIndex: Record<string, TaxonId[]> = {}
     const resourceIndex: Record<TaxonId, AmendedResourceMetadata> = {}
 
     await Promise.all(files.map(async function (fileName) {
@@ -55,6 +61,8 @@ async function main (args: string[]): Promise<void> {
             const [header, ...dwc] = csv.parseCsv(await fs.readFile(dwcFile, 'utf-8'))
             const gbifColumn = header.indexOf('gbifTaxonID')
             const gbifAcceptedColumn = header.indexOf('gbifAcceptedTaxonID')
+            const colColumn = header.indexOf('colTaxonID')
+            const colAcceptedColumn = header.indexOf('colAcceptedTaxonID')
             for (const taxon of dwc) {
                 const gbifId = taxon[gbifColumn]
                 if (gbifId) {
@@ -63,6 +71,15 @@ async function main (args: string[]): Promise<void> {
                         addTaxon(gbifIndex, taxon[gbifAcceptedColumn], taxon)
                     }
                 }
+
+                const colId = taxon[colColumn]
+                if (colId) {
+                    addTaxon(colIndex, colId, taxon)
+                    if (taxon[colAcceptedColumn] !== taxon[colColumn]) {
+                        addTaxon(colIndex, taxon[colAcceptedColumn], taxon)
+                    }
+                }
+
                 amendedResource.taxonCount += 1
             }
 
@@ -72,6 +89,7 @@ async function main (args: string[]): Promise<void> {
 
     await Promise.all([
         fs.writeFile(path.join(REPO_ROOT, 'gbif.index.json'), JSON.stringify(sortObject(gbifIndex), null, 2)),
+        fs.writeFile(path.join(REPO_ROOT, 'col.index.json'), JSON.stringify(sortObject(colIndex, alphabeticSort), null, 2)),
         fs.writeFile(path.join(REPO_ROOT, 'index.json'), JSON.stringify(sortObject(resourceIndex), null, 2))
     ])
 }
