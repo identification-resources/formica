@@ -149,4 +149,19 @@ Bogdania Kerzhner, 1964
         assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Bogdiana Kerzhner, 1964')
         assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Bogdiana myrmica Kerzhner, 1964')
     })
+
+    await t.test('parses cross-genus hybrids', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus, species]
+---
+
+x Triticosecale
+  Triticosecale indet.
+x Festulpia
+  Festuca_rubra x Vulpia_bromoides
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificName, '×Triticosecale')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, '×Festulpia')
+        assert.strictEqual(resource.taxa['T1:1:3'].scientificName, '×Festulpia Festuca rubra×Vulpia bromoides')
+    })
 })

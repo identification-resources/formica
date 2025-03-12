@@ -93,6 +93,8 @@ const RANK_LABELS_REVERSE: Record<string, Rank> = {
     'subsp': 'subspecies'
 }
 
+const HYBRID_SIGN = '\u00D7'
+
 /**
  *   1. Any number of
  *      - capitalized words
@@ -145,6 +147,14 @@ function compareRanks (a: Rank, b: Rank): number {
 
 function capitalize (name: string): string {
     return name[0].toUpperCase() + name.slice(1).toLowerCase()
+}
+
+function capitalizeGenericName (name: string): string {
+    if (name[0] === HYBRID_SIGN) {
+        return HYBRID_SIGN + capitalize(name.slice(1))
+    }
+
+    return capitalize(name)
 }
 
 function isUpperCase (name: string): boolean {
@@ -259,8 +269,12 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     }
 
     // Hybrids
+    if (rank === 'genus' && name.startsWith('x ')) {
+        name = HYBRID_SIGN + name.slice(2)
+    }
+
     if (rank === 'species' && /(^| )x /.test(name)) {
-        name = name.replace(/(^| )x /, '\u00D7')
+        name = name.replace(/(^| )x /, HYBRID_SIGN)
     }
 
     // Divide the name into the main scientific name (only the epithet for taxa
@@ -271,7 +285,9 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     }
 
     // To encode old names with spaces (e.g. "Orsillus pini canariensis Lindberg, 1953")
-    // underscores are used, which are replaced here.
+    // underscores are used, which are replaced here. This is also used for undescribed
+    // species (e.g. "Leiobunum species A") and intergeneric hybrids (e.g. "×Festulpia
+    // Festuca rubra × Vulpia bromoides")
     if (nameParts[1].includes('_')) {
         nameParts[1] = nameParts[1].replace(/_/g, ' ')
     }
@@ -286,9 +302,14 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     }
 
     // Validate names and recompose binomial and trinomial names
-    if (compareRanks('group', rank) > 0) {
+    if (rank === 'genus') {
+        item.scientificName = capitalizeGenericName(taxon)
+        if (taxon[0].toUpperCase() !== taxon[0] || (taxon[0] === HYBRID_SIGN && taxon[1].toUpperCase() !== taxon[1])) {
+            throw new Error(`Generic epithet should be capitalized: "${taxon}"`)
+        }
+    } else if (compareRanks('group', rank) > 0) {
         item.scientificName = capitalize(taxon)
-        if (item.scientificName[0] !== taxon[0]) {
+        if (taxon[0].toUpperCase() !== taxon[0]) {
             throw new Error(`Taxon name (${rank}) should be capitalized: "${taxon}"`)
         }
     } else if (rank === 'group') {
@@ -312,12 +333,12 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     } else if (rank === 'species') {
         item.genericName = parentContext.genus
         item.infragenericEpithet = parentContext.subgenus
-        item.specificEpithet = taxon.toLowerCase()
-        item.scientificName = `${item.genericName} ${item.specificEpithet}`
-        if (item.specificEpithet !== taxon) {
+        if (taxon.toLowerCase() !== taxon && !/^[A-Z][a-z]+ [a-z]+\xD7[A-Z][a-z]+ [a-z]+$/.test(taxon)) {
             console.log(item, taxon)
             throw new Error(`Specific epithet should be lowercase: "${taxon}"`)
         }
+        item.specificEpithet = taxon
+        item.scientificName = `${item.genericName} ${item.specificEpithet}`
     } else if (compareRanks('species', rank) < 0) {
         item.genericName = parentContext.genus
         item.infragenericEpithet = parentContext.subgenus
