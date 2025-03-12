@@ -135,11 +135,14 @@ const NAME_PATTERN = new RegExp(
 /**
  * Structure
  *   $1 genus+subgenus (+ trailing space): (?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?
- *     $1.1 genus: ([A-Z]\S+)
+ *     $1.1 genus: ((?:x )?[A-Z]\S+)
  *     $1.2 subgenus: (?:\(([A-Z]\S+?)\) )?
- *   $2 species: ((?:x )?[a-z][^\s.]+)
+ *   $2 species: (x [a-z]+|[a-z][^\s.]+(?: x [a-z]+)?|[A-Z][a-z]+_[a-z]+ x [A-Z][a-z]+_[a-z]+)
+ *     $2a: x [a-z]+
+ *     $2b hybrid: [a-z][^\s.]+(?: x [a-z]+)?
+ *     $2c intergeneric hybrid: [A-Z][a-z]+_[a-z]+ x [A-Z][a-z]+_[a-z]+
  */
-const BINAME_PATTERN = /^(?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?((?:x )?[a-z][^\s.]+)(?= |$)/
+const BINAME_PATTERN = /^(?:((?:x )?[A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?(x [a-z]+|[a-z][^\s.]+(?: x [a-z]+)?|[A-Z][a-z]+_[a-z]+ x [A-Z][a-z]+_[a-z]+)(?= |$)/
 
 function compareRanks (a: Rank, b: Rank): number {
     return RANKS.indexOf(a) - RANKS.indexOf(b)
@@ -162,7 +165,6 @@ function isUpperCase (name: string): boolean {
 }
 
 function getSynonymRank (name: string, rank: Rank): Rank {
-    const BINAME_PATTERN = /^([A-Z]\S+ (\([A-Z]\S+\) )?)?(x )?[a-z0-9-]+(?= |$)/
     const rest = name.replace(BINAME_PATTERN, '')
     const rankPrefix = rest.match(/^(?: |^)(st|r|ab|f|var|ssp|subsp)\. /)
     if (rankPrefix) {
@@ -204,7 +206,7 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     }
 
     // Set verbatim identification after subsequent syntax is removed.
-    item.verbatimIdentification = name
+    item.verbatimIdentification = name.replace(/(?<=^| )x(?=$| )/g, HYBRID_SIGN).replace(/_/g, ' ')
 
     // Parent context is used for parsing and formatting binomial names.
     // For formatting, it needs to match external databases (i.e. be correct).
@@ -228,7 +230,8 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     if (isSynonym || !parentContext.genus || (compareRanks('species', rank) < 0 && !parentContext.specificEpithet)) {
         const [, genus, subgenus, species] = name.match(BINAME_PATTERN) || []
         if (genus) {
-            parentContext.genus = parentContext.incorrect.genus = capitalize(genus)
+            parentContext.incorrect.genus = genus
+            parentContext.genus = capitalizeGenericName(genus.replace(/(^| )x /, HYBRID_SIGN))
         }
         if (subgenus) {
             parentContext.subgenus = capitalize(subgenus)
@@ -237,8 +240,9 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
             // from the parent context.
             delete parentContext.subgenus
         }
-        if (species) {
-            parentContext.specificEpithet = parentContext.incorrect.specificEpithet = species
+        if (species && compareRanks('species', rank) < 0) {
+            parentContext.incorrect.specificEpithet = species
+            parentContext.specificEpithet = species.replace(/(^| )x /, HYBRID_SIGN)
         }
     }
 
