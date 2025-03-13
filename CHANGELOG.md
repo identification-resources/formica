@@ -1,3 +1,14 @@
+## [0.6.8](https://github.com/identification-resources/formica/compare/v0.6.7...v0.6.8) (2025-03-13)
+
+
+### Features
+
+* **resources:** add support for intergeneric hybrids without parents ([3cb0c0c](https://github.com/identification-resources/formica/commit/3cb0c0cd60fc5a4ba88add623fbadc3b90d8530c))
+* **resources:** create index of CoL identifiers ([3792903](https://github.com/identification-resources/formica/commit/37929035374bc0c67ed2403e775e06a904bdbd4d))
+* **resources:** support intergeneric hybrids ([0a6696c](https://github.com/identification-resources/formica/commit/0a6696c5fd0603a0366c80c2298b6544636ed0c6))
+
+
+
 ## [0.6.7](https://github.com/identification-resources/formica/compare/v0.6.6...v0.6.7) (2025-02-26)
 
 
