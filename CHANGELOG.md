@@ -1,3 +1,22 @@
+# [0.7.0](https://github.com/identification-resources/formica/compare/v0.6.8...v0.7.0) (2025-03-14)
+
+
+### Bug Fixes
+
+* **resources:** improve diff regarding indet lines ([2615437](https://github.com/identification-resources/formica/commit/26154374f50d680c5f3e187cd6a1a5eadbac6b5d))
+
+
+### Features
+
+* **resources:** change syntax of "indet" line ([d53363e](https://github.com/identification-resources/formica/commit/d53363e65bfa77a2eb247999316621f9ca0bff59))
+
+
+### BREAKING CHANGES
+
+* **resources:** "indet" lines now have to be prefixed with "[indet]"
+
+
+
 ## [0.6.8](https://github.com/identification-resources/formica/compare/v0.6.7...v0.6.8) (2025-03-13)
 
 
