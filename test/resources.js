@@ -26,9 +26,9 @@ levels: [family, genus, species]
 
     Dolichurus haemorrhous A. Costa, 1886
   Dolichurus A. Costa, 1886
-    Dolichurus indet.
+    [indet]
 Sphecidae A. Costa, 1886
-    Sphecidae indet.
+    [indet]
 `, 'T1')
         assert.deepStrictEqual(Object.values(resource.taxa).map(taxon => taxon.scientificNameAuthorship), Array(3).fill('A. Costa, 1886'))
     })
@@ -86,7 +86,7 @@ levels: [genus, species]
 ---
 
 Drymus
-  Unknown sp.
+  [indet]
 `, 'T1')
         assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Drymus')
     })
@@ -156,7 +156,7 @@ levels: [genus, species]
 ---
 
 x Triticosecale
-  Triticosecale indet.
+  [indet]
 x Festulpia
   Festuca_rubra x Vulpia_bromoides
 `, 'T1')
