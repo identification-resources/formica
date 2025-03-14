@@ -5,7 +5,12 @@ export enum ResourceDiffType {
     Unchanged = '='
 }
 
-function LCS (X: string[], Y: string[]): ResourceDiffPart[] {
+interface DiffPart {
+    text: string,
+    type: ResourceDiffType
+}
+
+function LCS (X: string[], Y: string[]): DiffPart[] {
     const m = X.length
     const n = Y.length
 
@@ -57,7 +62,7 @@ function gitTokenize (text: string): string[] {
     return text.match(/\S+|\n|[\r\t\f\v \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/g) as string[]
 }
 
-export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenizer = gitTokenize): ResourceDiffPart[] {
+export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenizer = gitTokenize): ResourceDiff {
     const X = tokenize(a.trimEnd())
     const Y = tokenize(b.trimEnd())
 
@@ -94,7 +99,7 @@ export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenize
 
     // Convert word diff to line diff
     const lines: ResourceDiff = []
-    let line = null
+    let line: ResourceDiffPart|null = null
     let deletedNewlines = 0
     let nextLineNew = false
 
@@ -102,7 +107,7 @@ export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenize
         // Start of line
         if (line === null) {
             deletedNewlines = 0
-            line = { text: '', type: change.type }
+            line = { type: change.type }
         }
 
         // End of line (could be same token)
@@ -132,7 +137,8 @@ export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenize
             // Add placeholders for deleted lines
             while (deletedNewlines--) {
                 lines.push({
-                    text: '',
+                    text: undefined,
+                    original: '',
                     type: ResourceDiffType.Deleted
                 })
             }
@@ -147,7 +153,11 @@ export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenize
         }
 
         if (change.type !== ResourceDiffType.Deleted) {
-            line.text += change.text
+            line.text = (line.text ?? '') + change.text
+        }
+
+        if (change.type !== ResourceDiffType.Added) {
+            line.original = (line.original ?? '') + change.text
         }
     }
 

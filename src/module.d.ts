@@ -95,7 +95,8 @@ interface ResourceHistory {
 type ResourceDiff = ResourceDiffPart[]
 
 interface ResourceDiffPart {
-    text: string,
+    text?: string,
+    original?: string,
     type: ResourceDiffType
 }
 

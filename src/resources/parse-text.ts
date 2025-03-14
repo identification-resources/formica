@@ -488,6 +488,20 @@ function parseResource (resource: string): [ResourceMetadata, string] {
     return [config, content]
 }
 
+function getIndentation (line: string): number {
+    return (line.match(/^ */) as string[])[0].length
+}
+
+function isIndetLine (line: string, indent?: number): boolean {
+    if (indent === undefined) {
+        indent = getIndentation(line)
+    }
+
+    line = line.slice(indent)
+
+    return Array.from(INDET_SUFFIXES).some(suffix => line.endsWith(' ' + suffix))
+}
+
 function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds: number[]): Resource {
     const idBase = `${resource.id}:`
 
@@ -498,23 +512,19 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
     let previousId = ''
     let newIdOffset = Math.max(...oldIds)
 
-    for (const { text: line, type } of content) {
-        if (type === ResourceDiffType.Deleted) {
-            id++
+    for (const line of content) {
+        if (line.type === ResourceDiffType.Deleted) {
+            // Increase id counter for removed line unless it was an "indet line"
+            if (!isIndetLine(line.original as string)) {
+                id++
+            }
             continue
         }
 
-        // Do not process "indet" lines further, as they only serve to indicate
-        // that subtaxa are explicitely omitted
-        if (Array.from(INDET_SUFFIXES).some(suffix => line.endsWith(' ' + suffix))) {
-            continue
-        }
-
-        const lineIndent = (line.match(/^ */) as string[])[0].length
-
+        const lineIndent = getIndentation(line.text as string)
         if (lineIndent > groupIndent) {
             // Do not count synonyms as parents (unless this is correcting a typo in the synonym)
-            if (data[previousId] && data[previousId].taxonomicStatus === 'accepted' || /^( {2})+> /.test(line)) {
+            if (data[previousId] && data[previousId].taxonomicStatus === 'accepted' || /^( {2})+> /.test(line.text as string)) {
                 parents.push(previousId)
             } else {
                 parents.push(null)
@@ -533,10 +543,19 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
             groupIndent = lineIndent
         }
 
+        // Do not process "indet" lines further, as they only serve to indicate
+        // that subtaxa are explicitely omitted
+        if (isIndetLine(line.text as string, lineIndent)) {
+            // If the line was previously not and ndet line, increase the id counter
+            if (line.type === ResourceDiffType.Modified && !isIndetLine(line.original as string)) {
+                id++
+            }
+            continue
+        }
+
         const parentId = parents.reduce((grandparent, parent) => parent || grandparent, null)
         const parent = parentId === null ? {} as WorkingTaxon : data[parentId]
-
-        const name = line.slice(groupIndent)
+        const name = (line.text as string).slice(groupIndent)
         const rank = resource.metadata.levels[groupIndent / 2]
         const item = parseName(name, rank, parent)
         const isSynonym = item.taxonomicStatus !== 'accepted'
@@ -581,7 +600,10 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         }
 
         // Set identifiers
-        if (type === ResourceDiffType.Added) {
+        if (line.type === ResourceDiffType.Added) {
+            newIdOffset++
+            item.scientificNameID = idBase + newIdOffset.toString()
+        } else if (line.type === ResourceDiffType.Modified && isIndetLine(line.original as string)) {
             newIdOffset++
             item.scientificNameID = idBase + newIdOffset.toString()
         } else {
