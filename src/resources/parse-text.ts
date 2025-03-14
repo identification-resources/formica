@@ -66,14 +66,6 @@ const TAXONOMIC_STATUS: Record<string, TaxonStatus> = {
     '=': 'synonym'
 }
 
-const INDET_SUFFIXES = new Set([
-    'sp.',
-    'spec.',
-    'indet.',
-    'sp. indet.',
-    'spec. indet.'
-])
-
 const RANK_LABELS: Record<Rank, string> = {
     'subspecies': 'subsp.',
     'variety': 'var.',
@@ -301,7 +293,7 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     item.taxonRemarks = notes
     item.taxonRank = rank
 
-    if (/[^\p{L}0-9\u{00D7}\- ]/u.test(taxon) && !INDET_SUFFIXES.has(taxon)) {
+    if (/[^\p{L}0-9\u{00D7}\- ]/u.test(taxon)) {
         throw new Error(`Taxon name contains unexpected characters: "${taxon}"`)
     }
 
@@ -499,7 +491,7 @@ function isIndetLine (line: string, indent?: number): boolean {
 
     line = line.slice(indent)
 
-    return Array.from(INDET_SUFFIXES).some(suffix => line.endsWith(' ' + suffix))
+    return line.startsWith('[indet]')
 }
 
 function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds: number[]): Resource {
