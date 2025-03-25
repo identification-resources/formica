@@ -1,3 +1,12 @@
+## [0.7.1](https://github.com/identification-resources/formica/compare/v0.7.0...v0.7.1) (2025-03-25)
+
+
+### Features
+
+* **resources:** add 'subphylum' rank ([8b5243b](https://github.com/identification-resources/formica/commit/8b5243bfd79b6486c613ca1178f1e1c9ec3f43a4))
+
+
+
 # [0.7.0](https://github.com/identification-resources/formica/compare/v0.6.8...v0.7.0) (2025-03-14)
 
 
