@@ -4,6 +4,7 @@ import { createDiff, ResourceDiffType } from './diff-resource'
 
 const RANKS: Rank[] = [
     'phylum',
+    'subphylum',
     'class',
     'infraclass',
     'superorder',
