@@ -1,3 +1,12 @@
+## [0.7.2](https://github.com/identification-resources/formica/compare/v0.7.1...v0.7.2) (2025-04-02)
+
+
+### Features
+
+* **catalog:** add validation for taxa.csv ([59cfcf2](https://github.com/identification-resources/formica/commit/59cfcf28ebbef42e28e648e800c178a7d528f37a))
+
+
+
 ## [0.7.1](https://github.com/identification-resources/formica/compare/v0.7.0...v0.7.1) (2025-03-25)
 
 
