@@ -8,6 +8,7 @@ function getTypeInfo (type: string): [typeof Entity, string] {
         case 'authors': return TYPE_INFO.authors
         case 'places': return TYPE_INFO.places
         case 'publishers': return TYPE_INFO.publishers
+        case 'taxa': return TYPE_INFO.taxa
         case 'catalog': return TYPE_INFO.catalog
         default: throw new TypeError(`Unknown type "${type}"`)
     }
