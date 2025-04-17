@@ -1,3 +1,12 @@
+## [0.7.3](https://github.com/identification-resources/formica/compare/v0.7.2...v0.7.3) (2025-04-17)
+
+
+### Features
+
+* **catalog:** update validation for identifiers ([156a703](https://github.com/identification-resources/formica/commit/156a7036ab09c411d091bc9d0f628831a30ba3f5))
+
+
+
 ## [0.7.2](https://github.com/identification-resources/formica/compare/v0.7.1...v0.7.2) (2025-04-02)
 
 
