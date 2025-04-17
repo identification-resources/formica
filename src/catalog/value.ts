@@ -10,7 +10,11 @@ export const FORMATS = {
     KEY_TYPE: ['key', 'matrix', 'reference', 'gallery', 'checklist', 'supplement', 'collection', 'algorithm'],
     COMPLETE: ['TRUE', 'FALSE'],
 
-    ID: /^B\d+$/,
+    WORK_ID: /^B[1-9]\d*$/,
+    AUTHOR_ID: /^A[1-9]\d*$/,
+    PLACE_ID: /^G[1-9]\d*$/,
+    PUBLISHER_ID: /^P[1-9]\d*$/,
+    TAXON_ID: /^T[1-9]\d*$/,
     EDTF_0: /^(\d{4}(-\d{2}(-\d{2}(T\d{2}:\d{2}:\d{2}(Z|[-+]\d{2}(:\d{2})?))?)?)?|\d{4}(-\d{2}(-\d{2})?)?\/(\d{4}(-\d{2}(-\d{2})?)?|\.\.))$/,
     ISSN_L: /^[0-9]{4}-[0-9]{3}[0-9X]$/,
     ISBN: /^(\d{13}|\d{9}[0-9X])$/,

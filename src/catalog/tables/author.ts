@@ -4,10 +4,12 @@ import { Entity } from '../entity'
 export class Author extends Entity {
     constructor (values: Record<string, string>) {
         super(values, {
-            name: { required: true, multiple: false },
+            name: { required: true, multiple: true },
+            id: { required: true, multiple: false, format: FORMATS.AUTHOR_ID },
             qid: { required: false, multiple: false, format: FORMATS.QID },
-            main_full_name: { required: false, multiple: false },
-            full_names: { required: false, multiple: true }
+            display_name: { required: false, multiple: false },
+            full_names: { required: false, multiple: true },
+            duplicate_of: { required: false, multiple: false, format: FORMATS.AUTHOR_ID }
         })
     }
 }

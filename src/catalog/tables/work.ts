@@ -4,7 +4,7 @@ import { Entity } from '../entity'
 export class Work extends Entity {
     constructor (values: Record<string, string>) {
         super(values, {
-            id: { required: true, multiple: false, format: FORMATS.ID },
+            id: { required: true, multiple: false, format: FORMATS.WORK_ID },
             title: { required: true, multiple: CHECK.MULTILANG },
             author: { required: false, multiple: true },
             url: { required: false, multiple: true, format: FORMATS.URL },
@@ -31,10 +31,10 @@ export class Work extends Entity {
             region: { required: true, multiple: true },
             complete: { required: false, multiple: false, format: FORMATS.COMPLETE },
             target_taxa: { required: false, multiple: true },
-            listed_in: { required: false, multiple: true, format: FORMATS.ID },
-            part_of: { required: false, multiple: true, format: FORMATS.ID },
-            version_of: { required: false, multiple: true, format: FORMATS.ID },
-            duplicate_of: { required: false, multiple: false, format: FORMATS.ID }
+            listed_in: { required: false, multiple: true, format: FORMATS.WORK_ID },
+            part_of: { required: false, multiple: true, format: FORMATS.WORK_ID },
+            version_of: { required: false, multiple: true, format: FORMATS.WORK_ID },
+            duplicate_of: { required: false, multiple: false, format: FORMATS.WORK_ID }
         })
     }
 
