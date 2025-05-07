@@ -1,3 +1,17 @@
+# [0.8.0](https://github.com/identification-resources/formica/compare/v0.7.3...v0.8.0) (2025-05-07)
+
+
+### Bug Fixes
+
+* **catalog:** remove unused obsolete 'clean-links' script ([af1ecc2](https://github.com/identification-resources/formica/commit/af1ecc2fdd0a80bb8fa7108f3d52978239d7ef01))
+
+
+### Features
+
+* **catalog:** implement generation of linked data ([334616e](https://github.com/identification-resources/formica/commit/334616e2e12c0d91e49f84f06bdd00ab7a238b8e))
+
+
+
 ## [0.7.3](https://github.com/identification-resources/formica/compare/v0.7.2...v0.7.3) (2025-04-17)
 
 
