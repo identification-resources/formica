@@ -1,7 +1,5 @@
-import spdxLicenseList = require('spdx-license-list')
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import ietfTagListFactory = require('ietf-language-tag-regex')
+import spdxLicenseList from 'spdx-license-list'
+import ietfTagListFactory from 'ietf-language-tag-regex'
 
 const ietfTagList = ietfTagListFactory()
 

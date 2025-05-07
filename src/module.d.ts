@@ -139,3 +139,8 @@ interface ResourceProcessorConfig {
     update: boolean,
     updateMappings: boolean
 }
+
+declare module 'ietf-language-tag-regex' {
+    function createLanguageTagRegex(): RegExp
+    export = createLanguageTagRegex
+}

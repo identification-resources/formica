@@ -294,6 +294,7 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
     item.taxonRemarks = notes
     item.taxonRank = rank
 
+    // @ts-expect-error TS1501: This regular expression flag is only available when targeting 'es6' or later.
     if (/[^\p{L}0-9\u{00D7}\- ]/u.test(taxon)) {
         throw new Error(`Taxon name contains unexpected characters: "${taxon}"`)
     }

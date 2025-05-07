@@ -36,7 +36,8 @@ function LCS (X: string[], Y: string[]): DiffPart[] {
                 text: X[i - 1],
                 type: ResourceDiffType.Unchanged
             })
-            i--, j--
+            i--
+            j--
         } else if (i !== 0 && (j === 0 || C[i - 1][j] > C[i][j - 1])) {
             diff.unshift({
                 text: X[i - 1],

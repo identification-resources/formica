@@ -18,10 +18,8 @@ export class Entity {
         this.derivedFields = {}
     }
 
-    /* eslint-disable @typescript-eslint/no-empty-function */
     deriveFields () {
     }
-    /* eslint-enable @typescript-eslint/no-empty-function */
 
     get (key: string): Value | undefined {
         if (key in this.fields) {
