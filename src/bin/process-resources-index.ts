@@ -39,7 +39,7 @@ async function main (args: string[]): Promise<void> {
 
     const gbifIndex: Record<string, TaxonId[]> = {}
     const colIndex: Record<string, TaxonId[]> = {}
-    const resourceIndex: Record<TaxonId, AmendedResourceMetadata> = {}
+    const resourceIndex: Record<ResourceId, AmendedResourceMetadata> = {}
 
     await Promise.all(files.map(async function (fileName) {
         if (!fileName.endsWith('.txt')) { return }

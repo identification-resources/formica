@@ -33,10 +33,14 @@
   "dependencies": {
     "ietf-language-tag-regex": "^0.0.5",
     "js-yaml": "^4.1.0",
+    "jsonld": "^8.3.3",
+    "n3": "^1.25.2",
     "spdx-license-list": "^6.6.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.5",
+    "@types/jsonld": "^1.5.15",
+    "@types/n3": "^1.24.2",
     "@types/node": "^18.14.1",
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.0",
