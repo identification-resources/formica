@@ -7,7 +7,7 @@ export class Publisher extends Entity {
             name: { required: true, multiple: true },
             id: { required: true, multiple: false, format: FORMATS.PUBLISHER_ID },
             qid: { required: false, multiple: false, format: FORMATS.QID },
-            display_name: { required: false, multiple: false },
+            display_name: { required: true, multiple: false },
             full_names: { required: false, multiple: true },
             duplicate_of: { required: false, multiple: false, format: FORMATS.PUBLISHER_ID }
         })

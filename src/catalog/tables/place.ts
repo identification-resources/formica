@@ -7,7 +7,7 @@ export class Place extends Entity {
             name: { required: true, multiple: false },
             id: { required: true, multiple: false, format: FORMATS.PLACE_ID },
             qid: { required: false, multiple: false, format: FORMATS.QID },
-            display_name: { required: false, multiple: false },
+            display_name: { required: true, multiple: false },
             duplicate_of: { required: false, multiple: false, format: FORMATS.PLACE_ID }
         })
     }
