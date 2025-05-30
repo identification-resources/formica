@@ -1,3 +1,18 @@
+## [0.8.1](https://github.com/identification-resources/formica/compare/v0.8.0...v0.8.1) (2025-05-30)
+
+
+### Bug Fixes
+
+* **catalog:** fix aspects of linked data ([1b2964f](https://github.com/identification-resources/formica/commit/1b2964f46b8409c6a67f0475faf067a80734288c))
+* **catalog:** set display_name to required, as documented ([3f36909](https://github.com/identification-resources/formica/commit/3f36909bbe6261cbee022139050875de37174611))
+
+
+### Features
+
+* **resources:** add support for "(sub)gen. nov" pattern ([d2598eb](https://github.com/identification-resources/formica/commit/d2598ebfd2f80d9c2bcc00ce145b9fc229316e5b))
+
+
+
 # [0.8.0](https://github.com/identification-resources/formica/compare/v0.7.3...v0.8.0) (2025-05-07)
 
 
