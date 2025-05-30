@@ -62,7 +62,6 @@ const SCOPES: Record<string, [string, string]> = {
     'queens': ['dwc:caste', 'queen'],
     'workers': ['dwc:caste', 'worker'],
     'soldiers': ['dwc:caste', 'soldier'],
-    'alates': ['dwc:caste', 'alate'],
     'alatae': ['dwc:caste', 'alate'],
     'apterae': ['dwc:caste', 'aptera'],
     'viviparae': ['dwc:caste', 'vivipara'],
@@ -85,7 +84,9 @@ const PREFIXES = {
     'dwciri': 'http://rs.tdwg.org/dwc/iri/',
     'foaf': 'http://xmlns.com/foaf/0.1/',
     'owl': 'http://www.w3.org/2002/07/owl#',
+    'rdfs': 'http://www.w3.org/2000/01/rdf-schema#',
     'schema': 'https://schema.org/',
+    'xsd': 'http://www.w3.org/2001/XMLSchema#',
 }
 const DWC_FIELDS: Record<string, string> = {
     scientificName: 'dwc:scientificName',
@@ -100,6 +101,12 @@ const DWC_FIELDS: Record<string, string> = {
     verbatimIdentification: 'dwc:verbatimIdentification',
 }
 const GBIF_RANKS = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species', 'subspecies']
+const GBIF_VOCAB_RANKS = ['domain', 'kingdom', 'subkingdom', 'superphylum', 'phylum', 'subphylum', 'superclass', 'class', 'subclass', 'supercohort', 'cohort', 'subcohort', 'superorder', 'order', 'suborder', 'infraorder', 'superfamily', 'family', 'subfamily', 'tribe', 'subtribe', 'genus', 'subgenus', 'section', 'subsection', 'series', 'subseries', 'speciesAggregate', 'species', 'subspecificAggregate', 'subspecies', 'variety', 'subvariety', 'form', 'subform', 'cultivarGroup', 'cultivar', 'strain']
+const STATUSES: Record<string, string> = {
+    'accepted': 'http://rs.gbif.org/vocabulary/gbif/taxonomicStatus/accepted',
+    'heterotypic synonym': 'http://rs.gbif.org/vocabulary/gbif/taxonomicStatus/heterotypicSynonym',
+    'synonym': 'http://rs.gbif.org/vocabulary/gbif/taxonomicStatus/synonym',
+}
 
 function getCoveringTaxon (taxa: catalog.Entity[]): string|null {
     if (taxa.length === 1 && !taxa[0].has('gbif')) {
@@ -165,6 +172,18 @@ function makeScientificNameUri (id: string): NodeObject {
     return { '@id': `${PREFIX}resource/${resource}#${id}` }
 }
 
+function makeTaxonRankUri (rank: string): NodeObject|string {
+    if (GBIF_VOCAB_RANKS.includes(rank)) {
+        return { '@id': `http://rs.gbif.org/vocabulary/gbif/rank/${rank}` }
+    } else {
+        return rank
+    }
+}
+
+function makeTaxonomicStatusUri (status: string): NodeObject {
+    return { '@id': STATUSES[status] as string }
+}
+
 function makeLinkedDataForAuthor (author: catalog.Entity): NodeObject {
     const node: NodeObject = {
         '@id': `${PREFIX}author/${author.get('id')}`,
@@ -195,7 +214,7 @@ function makeLinkedDataForPlace (place: catalog.Entity): NodeObject {
 
 function makeLinkedDataForPublisher (publisher: catalog.Entity): NodeObject {
     const node: NodeObject = {
-        '@id': `${PREFIX}author/${publisher.get('id')}`,
+        '@id': `${PREFIX}publisher/${publisher.get('id')}`,
         '@type': 'foaf:Organization',
         'foaf:name': publisher.get('display_name')
     }
@@ -215,7 +234,7 @@ function makeLinkedDataForTaxon (taxon: catalog.Entity): NodeObject {
     }
 
     if (taxon.has('rank')) {
-        node['dwc:taxonRank'] = taxon.get('rank')
+        node['dwc:taxonRank'] = makeTaxonRankUri(taxon.get('rank') as string)
     }
 
     const ids = []
@@ -249,7 +268,7 @@ function makeLinkedDataForTaxa (files: Catalog): NodeObject[] {
         for (let i = 0; i < ancestors.length; i++) {
             gbifTaxa[ancestors[i]] = {
                 ...makeGbifUri(ancestors[i]),
-                'dwc:taxonRank': GBIF_RANKS[i],
+                'dwc:taxonRank': makeTaxonRankUri(GBIF_RANKS[i]),
                 'dwc:parentNameUsageID': i ? makeGbifUri(ancestors[i - 1]) : { '@id': `${PREFIX}taxon/T141` }
             }
         }
@@ -262,7 +281,7 @@ function makeLinkedDataForTaxa (files: Catalog): NodeObject[] {
             for (const child of children) {
                 gbifTaxa[child] = {
                     ...makeGbifUri(child),
-                    'dwc:taxonRank': childRank,
+                    'dwc:taxonRank': makeTaxonRankUri(childRank),
                 }
             }
         }
@@ -286,6 +305,14 @@ function makeLinkedDataForScientificName (name: AmendedTaxon): NodeObject {
         if (value) {
             node[DWC_FIELDS[field]] = value as string
         }
+    }
+
+    if (GBIF_VOCAB_RANKS.includes(name.taxonRank)) {
+        node[DWC_FIELDS.taxonRank] = makeTaxonRankUri(name.taxonRank)
+    }
+
+    if (name.taxonomicStatus) {
+        node[DWC_FIELDS.taxonomicStatus] = makeTaxonomicStatusUri(name.taxonomicStatus)
     }
 
     if (name.acceptedNameUsageID) {
@@ -435,7 +462,10 @@ function makeLinkedDataForWork (work: catalog.Entity, files: Catalog): NodeObjec
 
     if (work.has('title')) {
         const title = work.get('title') as string[]
-        node['dcterms:title'] = title.map((value, i) => ({ '@value': value, '@lang': languages[i] }))
+        if (title.length > languages.length) {
+            title.splice(0, title.length, title.join('; '))
+        }
+        node['dcterms:title'] = title.map((value, i) => ({ '@value': value, '@language': languages[i] }))
     }
 
     if (work.has('pages') && (work.get('pages') as string).includes('-')) {
@@ -462,7 +492,7 @@ function makeLinkedDataForWork (work: catalog.Entity, files: Catalog): NodeObjec
 
         const handle = urls.find(url => url.startsWith(HANDLE_PREFIX))
         if (handle) {
-            node['bibo:handle'] = handle.slice(HANDLE_PREFIX.length)
+            node['bibo:handle'] = { '@id': handle.slice(HANDLE_PREFIX.length) }
         }
 
         node['schema:url'] = urls.map(url => ({ '@id': url }))
@@ -479,7 +509,17 @@ function makeLinkedDataForWork (work: catalog.Entity, files: Catalog): NodeObjec
     }
 
     if (work.has('date')) {
-        node['dcterms:issued'] = work.get('date')
+        const date = work.get('date') as string
+        let dateType = 'rdfs:Literal'
+        if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            dateType = 'xsd:date'
+        } else if (date.match(/^\d{4}-\d{2}$/)) {
+            dateType = 'xsd:gYearMonth'
+        } else if (date.match(/^\d{4}$/)) {
+            dateType = 'xsd:gYear'
+        }
+
+        node['dcterms:issued'] = { '@value': work.get('date'), '@type': dateType }
     }
 
     if (work.has('publisher')) {
@@ -531,9 +571,15 @@ function makeLinkedDataForWork (work: catalog.Entity, files: Catalog): NodeObjec
             node['bibo:pages'] = pages
 
             const [start, end] = range.map(part => parseInt(part))
-            node['bibo:pageStart'] = start
-            node['bibo:pageEnd'] = end
-            node['bibo:numPages'] = end - start + 1
+            if (!isNaN(start)) {
+                node['bibo:pageStart'] = start
+            }
+            if (!isNaN(end)) {
+                node['bibo:pageEnd'] = end
+            }
+            if (!isNaN(start) && !isNaN(end)) {
+                node['bibo:numPages'] = end - start + 1
+            }
         } else {
             node['bibo:pages'] = pages
         }
@@ -600,7 +646,7 @@ function makeLinkedDataForWorks (files: Catalog): NodeObject[] {
             const originals = work.get('version_of') as string[]
             const originalLanguages = originals.map(id => ((works.get(id) as catalog.Entity).get('language') as string[]).join())
             node['bibo:translationOf'] = originals.filter((_, i) => originalLanguages[i] !== language.join()).map(makeWorkUri)
-            node['dcterms:isVersionOf'] = originals.map(makeWorkUri)
+            node['dcterms:isVersionOf'] = originals.filter(id => work.get('id') !== id).map(makeWorkUri)
         }
 
         let resourceIndex = 1
