@@ -1,3 +1,13 @@
+## [0.8.2](https://github.com/identification-resources/formica/compare/v0.8.1...v0.8.2) (2025-06-26)
+
+
+### Bug Fixes
+
+* **resources:** add support for documented flag ([6cb89e4](https://github.com/identification-resources/formica/commit/6cb89e428bde8665b7e8f03b5c7f47a44e15f58e))
+* **resources:** allow hyphens in biname pattern ([6a58a77](https://github.com/identification-resources/formica/commit/6a58a77757b8b6ae8c2d7d01440775776d183d05))
+
+
+
 ## [0.8.1](https://github.com/identification-resources/formica/compare/v0.8.0...v0.8.1) (2025-05-30)
 
 
