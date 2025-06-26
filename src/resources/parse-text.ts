@@ -58,7 +58,8 @@ const DWC_RANKS: DwcRank[] = [
 const FLAGS: ResourceFlag[] = [
     'MISSING_TAXA',
     'MISSING_PARENT_TAXA',
-    'MISSING_SYNONYMS'
+    'MISSING_SYNONYMS',
+    'MISSING_AUTHORSHIP'
 ]
 
 const TAXONOMIC_STATUS: Record<string, TaxonStatus> = {
