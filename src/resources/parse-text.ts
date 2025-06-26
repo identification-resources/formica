@@ -131,12 +131,12 @@ const NAME_PATTERN = new RegExp(
  *   $1 genus+subgenus (+ trailing space): (?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?
  *     $1.1 genus: ((?:x )?[A-Z]\S+)
  *     $1.2 subgenus: (?:\(([A-Z]\S+?)\) )?
- *   $2 species: (x [a-z]+|[a-z][^\s.]+(?: x [a-z]+)?|[A-Z][a-z]+_[a-z]+ x [A-Z][a-z]+_[a-z]+)
- *     $2a: x [a-z]+
- *     $2b hybrid: [a-z][^\s.]+(?: x [a-z]+)?
- *     $2c intergeneric hybrid: [A-Z][a-z]+_[a-z]+ x [A-Z][a-z]+_[a-z]+
+ *   $2 species: (x [a-z-]+|[a-z-][^\s.]+(?: x [a-z-]+)?|[A-Z][a-z]+_[a-z-]+ x [A-Z][a-z]+_[a-z-]+)
+ *     $2a: x [a-z-]+
+ *     $2b hybrid: [a-z-][^\s.]+(?: x [a-z-]+)?
+ *     $2c intergeneric hybrid: [A-Z][a-z]+_[a-z-]+ x [A-Z][a-z]+_[a-z-]+
  */
-const BINAME_PATTERN = /^(?:((?:x )?[A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?(x [a-z]+|[a-z][^\s.]+(?: x [a-z]+)?|[A-Z][a-z]+_[a-z]+ x [A-Z][a-z]+_[a-z]+)(?= |$)/
+const BINAME_PATTERN = /^(?:((?:x )?[A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?(x [a-z-]+|[a-z-][^\s.]+(?: x [a-z-]+)?|[A-Z][a-z]+_[a-z-]+ x [A-Z][a-z]+_[a-z-]+)(?= |$)/
 
 function compareRanks (a: Rank, b: Rank): number {
     return RANKS.indexOf(a) - RANKS.indexOf(b)
