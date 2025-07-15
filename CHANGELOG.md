@@ -1,3 +1,12 @@
+## [0.8.3](https://github.com/identification-resources/formica/compare/v0.8.2...v0.8.3) (2025-07-15)
+
+
+### Features
+
+* **catalog:** add catalog field key_characteristics ([6529cfa](https://github.com/identification-resources/formica/commit/6529cfab81f759f926b81bdd9d5a36e84b526284))
+
+
+
 ## [0.8.2](https://github.com/identification-resources/formica/compare/v0.8.1...v0.8.2) (2025-06-26)
 
 
