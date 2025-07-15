@@ -30,6 +30,7 @@ export class Work extends Entity {
             scope: { required: false, multiple: true },
             region: { required: true, multiple: true },
             complete: { required: false, multiple: false, format: FORMATS.COMPLETE },
+            key_characteristics: { required: false, multiple: true },
             target_taxa: { required: false, multiple: true },
             listed_in: { required: false, multiple: true, format: FORMATS.WORK_ID },
             part_of: { required: false, multiple: true, format: FORMATS.WORK_ID },
