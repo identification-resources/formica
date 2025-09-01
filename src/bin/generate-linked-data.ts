@@ -45,6 +45,7 @@ const SCOPES: Record<string, [string, string]> = {
     'nymphs': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
     'nypmhs': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
     'nymphs (instar V)': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
+    'nymphs (instar IV)': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
     'eggs': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/embryo'],
 
     // plant life stage
