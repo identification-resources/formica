@@ -100,8 +100,6 @@ interface ResourceDiffPart {
     type: ResourceDiffType
 }
 
-type ResourceDiffTokenizer = (text: string) => string[]
-
 declare enum ResourceDiffType {
     Added = '+',
     Deleted = '-',

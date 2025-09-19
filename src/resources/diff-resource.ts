@@ -76,17 +76,18 @@ function LCS (X: string[], Y: string[]): DiffPart[] {
     return diff
 }
 
-function gitTokenize (text: string): string[] {
+function tokenizeWords (text: string): string[] {
     if (text.length === 0) {
         return []
     }
     return text.match(/\S+|\n|[\r\t\f\v \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+/g) as string[]
 }
 
-export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenizer = gitTokenize): ResourceDiff {
-    const X = tokenize(a.trimEnd())
-    const Y = tokenize(b.trimEnd())
+function tokenizeLines (text: string): string[] {
+    return text.split('\n')
+}
 
+function diffTokens (X: string[], Y: string[]): ResourceDiff {
     // Remove common prefix
     const prefix = []
     while (X.length && X[0] === Y[0]) {
@@ -109,16 +110,15 @@ export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenize
         Y.pop()
     }
 
-    // Generate word from remains, combine with prefix and suffix, add trailing
-    // newline
-    const changes = [
+    // Generate diff from remains, combine with prefix and suffix
+    return [
         ...prefix,
         ...LCS(X, Y),
-        ...suffix,
-        { text: '\n', type: ResourceDiffType.Unchanged }
+        ...suffix
     ]
+}
 
-    // Convert word diff to line diff
+function convertWordDiff (changes: ResourceDiff): ResourceDiff {
     const lines: ResourceDiff = []
     let line: ResourceDiffPart|null = null
     let deletedNewlines = 0
@@ -183,4 +183,40 @@ export function createDiff (a: string, b: string, tokenize: ResourceDiffTokenize
     }
 
     return lines
+}
+
+function getWordTokensFromLines (lines: ResourceDiff): string[] {
+    return lines.flatMap(change => tokenizeWords(change.text as string).concat('\n'))
+}
+
+export function createDiff (a: string, b: string): ResourceDiff {
+    const lines: ResourceDiff = diffTokens(tokenizeLines(a.trimEnd()), tokenizeLines(b.trimEnd()))
+
+    const changes: ResourceDiff = []
+    const diffPart: Record<string, ResourceDiff> = { added: [], deleted: [] }
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].type === ResourceDiffType.Added) {
+            diffPart.added.push(lines[i])
+            continue
+        } else if (lines[i].type === ResourceDiffType.Deleted) {
+            diffPart.deleted.push(lines[i])
+            continue
+        }
+
+        if (diffPart.added.length && diffPart.deleted.length) {
+            changes.push(...convertWordDiff(diffTokens(getWordTokensFromLines(diffPart.added), getWordTokensFromLines(diffPart.deleted))))
+            diffPart.added.length = 0
+            diffPart.deleted.length = 0
+        } else if (diffPart.added.length) {
+            changes.push(...diffPart.added)
+            diffPart.added.length = 0
+        } else if (diffPart.deleted.length) {
+            changes.push(...diffPart.deleted.map(change => ({ text: undefined, original: change.text, type: change.type })))
+            diffPart.deleted.length = 0
+        }
+
+        changes.push(lines[i])
+    }
+
+    return changes
 }
