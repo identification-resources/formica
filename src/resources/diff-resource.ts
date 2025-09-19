@@ -10,18 +10,38 @@ interface DiffPart {
     type: ResourceDiffType
 }
 
+class Matrix {
+    values: Array<number>
+    m: number
+    n: number
+
+    constructor (m: number, n: number) {
+        this.values = Array(m * n).fill(0)
+        this.m = m
+        this.n = n
+    }
+
+    getValue (i: number, j: number) {
+        return this.values[(i * this.n) + j]
+    }
+
+    setValue (i: number, j: number, value: number) {
+        this.values[(i * this.n) + j] = value
+    }
+}
+
 function LCS (X: string[], Y: string[]): DiffPart[] {
     const m = X.length
     const n = Y.length
 
     // Build matrix
-    const C = Array(m + 1).fill(0).map(() => Array(n + 1).fill(0))
+    const C = new Matrix(m + 1, n + 1)
     for (let i = 0; i < m; i++) {
         for (let j = 0; j < n; j++) {
             if (X[i] === Y[j]) {
-                C[i + 1][j + 1] = C[i][j] + 1
+                C.setValue(i + 1, j + 1, C.getValue(i, j) + 1)
             } else {
-                C[i + 1][j + 1] = Math.max(C[i][j + 1], C[i + 1][j])
+                C.setValue(i + 1, j + 1, Math.max(C.getValue(i, j + 1), C.getValue(i + 1, j)))
             }
         }
     }
@@ -38,7 +58,7 @@ function LCS (X: string[], Y: string[]): DiffPart[] {
             })
             i--
             j--
-        } else if (i !== 0 && (j === 0 || C[i - 1][j] > C[i][j - 1])) {
+        } else if (i !== 0 && (j === 0 || C.getValue(i - 1, j) > C.getValue(i, j - 1))) {
             diff.unshift({
                 text: X[i - 1],
                 type: ResourceDiffType.Added
