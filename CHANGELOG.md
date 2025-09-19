@@ -1,3 +1,18 @@
+## [0.8.4](https://github.com/identification-resources/formica/compare/v0.8.3...v0.8.4) (2025-09-19)
+
+
+### Bug Fixes
+
+* **catalog:** clearer error message when validating ([b1c34f0](https://github.com/identification-resources/formica/commit/b1c34f00ed9a262251d2d24b3e6c46fd17730405))
+* **resources:** optimize diffing algorithm ([0c86c49](https://github.com/identification-resources/formica/commit/0c86c49474754dced74c8423f3e6b7ed2fd2a78f)), closes [#6](https://github.com/identification-resources/formica/issues/6)
+
+
+### Features
+
+* **catalog:** map additional scope value ([80c6d26](https://github.com/identification-resources/formica/commit/80c6d269a7d5b03600991fb353280e81afcefb0e))
+
+
+
 ## [0.8.3](https://github.com/identification-resources/formica/compare/v0.8.2...v0.8.3) (2025-07-15)
 
 
