@@ -362,12 +362,14 @@ function makeLinkedDataForResource (work: catalog.Entity, files: Catalog, resour
 
     const types = resource.get('key_type') ?? work.get('key_type') ?? []
 
-    if (types.includes('matrix')) {
+    if (types.includes('matrix') || types.includes('algorithm')) {
         node['dcterms:type'] = { '@id': 'http://purl.org/dc/dcmitype/Software' }
     } else if (types.includes('key') || types.includes('reference') || types.includes('supplement')) {
         node['dcterms:type'] = { '@id': 'http://purl.org/dc/dcmitype/Text' }
     } else if (types.includes('gallery') || types.includes('collection')) {
         node['dcterms:type'] = { '@id': 'http://purl.org/dc/dcmitype/Collection' }
+    } else if (types.includes('checklist')) {
+        node['dcterms:type'] = { '@id': 'http://purl.org/dc/dcmitype/Dataset' }
     }
 
     if (types.includes('key') || types.includes('matrix')) {
