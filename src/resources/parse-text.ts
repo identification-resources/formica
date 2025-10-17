@@ -329,6 +329,15 @@ function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxo
             console.log(item, taxon)
             throw new Error(`Subgroup name should be lowercase: "${taxon}"`)
         }
+    } else if (compareRanks('species', rank) > 0) {
+        item.genericName = parentContext.genus
+        item.infragenericEpithet = parentContext.subgenus
+        const specificEpithet = taxon.toLowerCase()
+        item.scientificName = `${item.genericName} ${specificEpithet}`
+        if (specificEpithet !== taxon) {
+            console.log(item, taxon)
+            throw new Error(`Subgroup name should be lowercase: "${taxon}"`)
+        }
     } else if (rank === 'species') {
         item.genericName = parentContext.genus
         item.infragenericEpithet = parentContext.subgenus
