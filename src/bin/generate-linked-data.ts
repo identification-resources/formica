@@ -58,6 +58,7 @@ const SCOPES: Record<string, [string, string]> = {
     // sex
     'females': ['dwciri:sex', 'http://rs.gbif.org/vocabulary/gbif/sex/female'],
     'males': ['dwciri:sex', 'http://rs.gbif.org/vocabulary/gbif/sex/male'],
+    'male': ['dwciri:sex', 'http://rs.gbif.org/vocabulary/gbif/sex/male'],
 
     // caste
     'queens': ['dwc:caste', 'queen'],
