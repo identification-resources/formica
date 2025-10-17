@@ -231,7 +231,7 @@ function makeLinkedDataForTaxon (taxon: catalog.Entity): NodeObject {
     const node: NodeObject = {
         '@id': `${PREFIX}taxon/${taxon.get('id')}`,
         '@type': 'dwc:Taxon',
-        'dwc:scientificName': taxon.get('display_name'),
+        'dwc:scientificName': taxon.get('name'),
     }
 
     if (taxon.has('rank')) {
@@ -660,10 +660,10 @@ function makeLinkedDataForWorks (files: Catalog): NodeObject[] {
             }
             (node['dcterms:hasPart'] as NodeObject[]).push(resource)
 
-            if (!Array.isArray(resource['dcterms:isPartof'])) {
-                resource['dcterms:isPartof'] = []
+            if (!Array.isArray(resource['dcterms:isPartOf'])) {
+                resource['dcterms:isPartOf'] = []
             }
-            (resource['dcterms:isPartof'] as NodeObject[]).push({ '@id': node['@id'] })
+            (resource['dcterms:isPartOf'] as NodeObject[]).push({ '@id': node['@id'] })
         }
     }
 
