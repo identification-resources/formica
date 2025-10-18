@@ -9,6 +9,7 @@
     "loir-validate-resources": "./lib/bin/validate-resources-text.js",
     "loir-resources-process": "./lib/bin/process-resources.js",
     "loir-resources-index": "./lib/bin/process-resources-index.js",
+    "loir-generate-linked-data": "./lib/bin/generate-linked-data.js",
     "loir-catalog-clean-links": "./lib/bin/clean-links.js"
   },
   "scripts": {
