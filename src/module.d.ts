@@ -27,7 +27,7 @@ type TaxonId = string
 type ResourceId = string
 type WorkId = string
 
-interface WorkingTaxon {
+interface TaxonBase {
     scientificNameID?: TaxonId,
     scientificName?: string,
     scientificNameAuthorship?: string,
@@ -56,13 +56,15 @@ interface WorkingTaxon {
     subgenus?: string,
     higherClassification?: string,
     verbatimIdentification?: string,
+}
 
+interface WorkingTaxon extends TaxonBase {
     // Non-standard
     scientificNameOnly?: string,
     incorrect?: WorkingTaxon
 }
 
-interface Taxon extends WorkingTaxon {
+interface Taxon extends TaxonBase {
     scientificNameID: TaxonId,
     scientificName: string,
     taxonRank: Rank,
