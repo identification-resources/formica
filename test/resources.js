@@ -231,4 +231,30 @@ Cydnidae
 `, 'T1')
         })
     })
+
+    await test('parses genera with subgenus-rank synonyms', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus]
+---
+
+Ectemnius Dahlbom
+  = Crabro (Ectemnius) Dahlbom
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:2'].taxonRank, 'subgenus')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Ectemnius Dahlbom')
+        assert.strictEqual(resource.taxa['T1:1:2'].genericName, 'Crabro')
+    })
+
+    await test('parses genera with like-name subgenera', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus, subgenus]
+---
+
+Polistes Latreille, 1802
+  Polistes Latreille, 1802
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:2'].taxonRank, 'subgenus')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Polistes Latreille, 1802')
+        assert.strictEqual(resource.taxa['T1:1:2'].genericName, 'Polistes')
+    })
 })

@@ -96,6 +96,13 @@ const NAME_PATTERN = new RegExp(
 
 /**
  * Structure
+ *   $1 genus: ((?:x )?[A-Z]\S+)
+ *   $2 subgenus: (?:\(([A-Z]\S+?)\) )?
+ */
+const SUBGENUS_PATTERN = /^([A-Z]\S+) (?:\(([A-Z]\S+?)\))(?= |$)/
+
+/**
+ * Structure
  *   $1 genus+subgenus (+ trailing space): (?:([A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?
  *     $1.1 genus: ((?:x )?[A-Z]\S+)
  *     $1.2 subgenus: (?:\(([A-Z]\S+?)\) )?
@@ -131,6 +138,8 @@ function getSynonymRank (name: string, rank: Rank): Rank {
     const rankPrefix = rest.match(/^(?: |^)(st|r|ab|f|var|ssp|subsp)\. /)
     if (rankPrefix) {
         return RANK_LABELS_REVERSE[rankPrefix[1]] as string
+    } else if (SUBGENUS_PATTERN.test(name)) {
+        return 'subgenus'
     } else if (!BINAME_PATTERN.test(name)) {
         return rank
     } else if (/^ (?!sensu)[a-z0-9-]+($| )/.test(rest)) {
@@ -190,7 +199,7 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
     // provide parts of the name (e.g. bare species without a genus parent, or
     // even subspecies without a species or genus parent).
     if (isSynonym || !parentContext.genus || (compareRanks('species', rank) < 0 && !parentContext.specificEpithet)) {
-        const [, genus, subgenus, species] = name.match(BINAME_PATTERN) || []
+        const [, genus, subgenus, species] = name.match(BINAME_PATTERN) ?? name.match(SUBGENUS_PATTERN) ?? []
         if (genus) {
             parentContext.incorrect.genus = genus
             parentContext.genus = capitalizeGenericName(genus.replace(/(^| )x /, HYBRID_SIGN))
@@ -232,6 +241,15 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
             // Remove rank abbreviations
             name = name.replace(/^(st|r|ab|f|var|ssp|subsp)\. /, '')
         }
+    } else if (compareRanks('genus', rank) <= 0) {
+        // Remove genus
+        const genus = parentContext.incorrect.genus || parentContext.genus || ''
+        if (name[0] === genus[0] && name.toLowerCase().startsWith(genus.toLowerCase() + ' (')) {
+            name = name.slice(genus.length + 1)
+        }
+
+        // Remove subgenus parentheses
+        name = name.replace(/^\((.*?)\)/, '$1')
     }
 
     // Hybrids
@@ -269,15 +287,22 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
     }
 
     // Validate names and recompose binomial and trinomial names
-    if (rank === 'genus') {
+    if (compareRanks('genus', rank) > 0) {
+        item.scientificName = capitalize(taxon)
+        if (taxon[0].toUpperCase() !== taxon[0]) {
+            throw new Error(`Taxon name (${rank}) should be capitalized: "${taxon}"`)
+        }
+    } else if (rank === 'genus') {
         item.scientificName = capitalizeGenericName(taxon)
         if (taxon[0].toUpperCase() !== taxon[0] || (taxon[0] === HYBRID_SIGN && taxon[1].toUpperCase() !== taxon[1])) {
             throw new Error(`Generic epithet should be capitalized: "${taxon}"`)
         }
     } else if (compareRanks('group', rank) > 0) {
+        item.genericName = parentContext.genus
+        item.infragenericEpithet = parentContext.subgenus
         item.scientificName = capitalize(taxon)
         if (taxon[0].toUpperCase() !== taxon[0]) {
-            throw new Error(`Taxon name (${rank}) should be capitalized: "${taxon}"`)
+            throw new Error(`Infrageneric epithet should be capitalized: "${taxon}"`)
         }
     } else if (rank === 'group') {
         item.genericName = parentContext.genus
