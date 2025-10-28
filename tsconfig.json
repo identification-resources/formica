@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
     "outDir": "./lib",
-    "target": "es5",
+    "target": "es6",
 
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noImplicitThis": true,
+
+    "module": "commonjs",
+    "moduleResolution": "node10",
     "esModuleInterop": true
   },
   "include": ["./src/**/*"]
