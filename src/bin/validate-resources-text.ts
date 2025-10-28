@@ -14,7 +14,7 @@ async function main (args: string[]): Promise<void> {
         try {
             resources.parseTextFile(file, id)
         } catch (error) {
-            console.error(filePath + '\n    ' + error.message + '\n')
+            console.error(filePath + '\n' + error.message.replace(/^/gm, '    ') + '\n')
             exitStatus = 1
         }
     }

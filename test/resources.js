@@ -175,4 +175,60 @@ x Festulpia Festuca_rubra x Vulpia_bromoides
         assert.strictEqual(resource.taxa['T1:1:1'].scientificName, '×Festulpia Festuca rubra×Vulpia bromoides')
         assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, '× Festulpia Festuca rubra × Vulpia bromoides')
     })
+
+    await test('handles skips in ranks', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [family, genus, species]
+---
+
+Apidae
+    Apis mellifera
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Apis mellifera')
+        assert.strictEqual(resource.taxa['T1:1:2'].genus, 'Apis')
+        assert.strictEqual(resource.taxa['T1:1:2'].taxonRank, 'species')
+    })
+
+    await test('synonyms do not break recognition of missing leaf taxa (1)', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus, subgenus, species]
+---
+
+Bombus
+  = Psithyrus
+  Bombus
+    pascuorum
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Bombus pascuorum')
+    })
+
+    await test('synonyms do not break recognition of missing leaf taxa (2)', (t) => {
+        assert.throws(() => {
+          resources.parseTextFile(`---
+levels: [genus, subgenus, species]
+---
+
+Bombus
+  Psithyrus
+    = Psithirus
+  Bombus
+    pascuorum
+`, 'T1')
+        })
+    })
+
+    await test('synonyms do not break recognition of missing leaf taxa (3)', (t) => {
+        assert.throws(() => {
+            resources.parseTextFile(`---
+levels: [family, genus, species]
+---
+
+Acanthosomidae
+  = Acanthosomatidae
+Cydnidae
+  Legnotus
+    limbosus
+`, 'T1')
+        })
+    })
 })

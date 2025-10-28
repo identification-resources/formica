@@ -31,6 +31,17 @@ const FLAGS: ResourceFlag[] = [
     'MISSING_AUTHORSHIP'
 ]
 
+const RESOURCE_DELIMITER = '\n\n===\n\n'
+const INDENT = 2
+
+function makeParseError (message: string, line: number, column: number = 1): SyntaxError {
+    return new SyntaxError(`[${line}:${column}] ${message}`)
+}
+
+function mergeParserErrors (errors: SyntaxError[]): SyntaxError {
+    return new SyntaxError(errors.map(error => error.message).join('\n'))
+}
+
 function parseHeader (header: string): ResourceMetadata {
     const config = yaml.load(header)
 
@@ -107,113 +118,101 @@ function parseHeader (header: string): ResourceMetadata {
     return metadata
 }
 
-function validateResource (config: ResourceMetadata, content: string) {
-    // Check for too much indentation
-    const longerIndent = new RegExp(`^(  ){${config.levels.length - 1}}(?!  [+=>] |    > ) `, 'm')
-    const longerIndentMatch = content.match(longerIndent)
-    if (longerIndentMatch !== null) {
-        const offset = longerIndentMatch.index
-        const line = (content.slice(0, offset).match(/\n/g) || []).length + 1
-        throw new SyntaxError(`Too much indentation at ${line}:0
-${content.slice(offset).split('\n', 1)}
-^`)
+function parseResource (resource: FilePart): [ResourceMetadata, FilePart] {
+    const [header, _, ...rest] = resource.content.split(/(\n---\n+)/)
+    let config
+
+    try {
+        config = parseHeader(header)
+    } catch (error) {
+        throw makeParseError(error.message, resource.offsetLine + 1)
     }
 
-    // Check for missing leaf taxa
-    const leafTaxonRank = config.levels.filter(rank => MAIN_RANKS.includes(rank)).pop() as string
-    const leafTaxonParentIndent = config.levels.indexOf(leafTaxonRank) - 1
-    if (leafTaxonRank && leafTaxonParentIndent >= 0) {
-        const missingLeafTaxa = new RegExp(`^((?:  ){0,${leafTaxonParentIndent}})(?![+=> ] ).*\\n(\\1(  )+[+=>].*\\n)*(?!\\1  )`, 'm')
-        const missingLeafTaxaMatch = content.match(missingLeafTaxa)
-        if (missingLeafTaxaMatch !== null) {
-            const offset = missingLeafTaxaMatch.index
-            const line = (content.slice(0, offset).match(/\n/g) || []).length + 1
-            throw new SyntaxError(`Missing leaf taxon at ${line}:0
-${content.slice(offset).split('\n', 1)}
-^`)
-        }
-    }
-}
-
-function parseResource (resource: string): [ResourceMetadata, string] {
-    const [header, _, ...rest] = resource.split(/(\n---\n+)/)
-    const config = parseHeader(header)
     const content = rest.join('')
+    const offsetLine = resource.offsetLine + (header + _).split('\n').length - 1
 
-    return [config, content]
+    return [config, { content, offsetLine }]
 }
 
-function getIndentation (line: string): number {
-    return (line.match(/^ */) as string[])[0].length
-}
-
-function isIndetLine (line: string, indent?: number): boolean {
-    if (indent === undefined) {
-        indent = getIndentation(line)
-    }
-
-    line = line.slice(indent)
-
-    return line.startsWith('[indet]')
-}
-
-function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds: number[]): Resource {
-    const idBase = `${resource.id}:`
-
+function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds: number[], offsetLine: number): Resource {
+    const leafTaxonIndex = resource.metadata.levels.reduce((last, rank, i) => MAIN_RANKS.includes(rank) ? i : last, 0)
     const data = resource.taxa as Record<TaxonId, WorkingTaxon>
+    const errors = []
+
     let id = 0
-    let parents: Array<TaxonId | null> = []
-    let groupIndent = 0
-    let previousId = ''
-    let newIdOffset = Math.max(...oldIds)
+    let newId = Math.max(...oldIds)
+    let lineNumber = offsetLine
+
+    const parents: Array<TaxonId | null> = []
+    const previous = { id: '', indent: 0, group: { isLeaf: false, indent: 0 } }
 
     for (const line of content) {
+        const hasOriginalId = line.type !== ResourceDiffType.Added && !/^\s*(\[indet\]|> )/.test(line.original ?? line.text as string)
+        if (hasOriginalId) {
+            id++
+        }
+
         if (line.type === ResourceDiffType.Deleted) {
-            // Increase id counter for removed line unless it was an "indet line"
-            if (!isIndetLine(line.original as string)) {
-                id++
-            }
+            continue
+        } else {
+            lineNumber++
+        }
+
+        const [indentation, name] = (line.text as string).match(/^(\s*)(.*)/)!.slice(1)
+        const lineIndent = indentation.length
+
+        // Validate line
+        if (lineIndent % INDENT === 1) {
+            errors.push(makeParseError('Too much or little indentation', lineNumber))
+            continue
+        } else if (lineIndent / INDENT >= resource.metadata.levels.length && !/^[+=>] /.test(name)) {
+            errors.push(makeParseError('Too much indentation', lineNumber))
+            continue
+        } else if (lineIndent <= previous.group.indent && (data[previous.id] && !previous.group.isLeaf)) {
+            errors.push(makeParseError('Missing leaf taxon', lineNumber - 1))
             continue
         }
 
-        const lineIndent = getIndentation(line.text as string)
-        if (lineIndent > groupIndent) {
+        // Update parentage
+        if (lineIndent > previous.indent) {
             // Do not count synonyms as parents (unless this is correcting a typo in the synonym)
-            if (data[previousId] && data[previousId].taxonomicStatus === 'accepted' || /^( {2})+> /.test(line.text as string)) {
-                parents.push(previousId)
+            if (data[previous.id] && data[previous.id].taxonomicStatus === 'accepted' || name.startsWith('> ')) {
+                parents.push(previous.id)
             } else {
                 parents.push(null)
             }
+
             // Handle skips in indentation levels,
             // e.g. if a certain genus has only species
             // whereas other genera in the same key also
             // have subgenera
-            if ((lineIndent - groupIndent) > 2) {
-                const gap = (lineIndent - groupIndent - 2) / 2
-                for (let i = 0; i < gap; i++) { parents.push(null) }
+            for (let i = previous.indent + INDENT; i < lineIndent; i += INDENT) {
+                parents.push(null)
             }
-            groupIndent = lineIndent
-        } else if (lineIndent < groupIndent) {
-            parents = parents.slice(0, lineIndent / 2)
-            groupIndent = lineIndent
+        } else if (lineIndent < previous.indent) {
+            parents.splice(lineIndent / INDENT)
         }
+
+        previous.indent = lineIndent
 
         // Do not process "indet" lines further, as they only serve to indicate
         // that subtaxa are explicitely omitted
-        if (isIndetLine(line.text as string, lineIndent)) {
-            // If the line was previously not and ndet line, increase the id counter
-            if (line.type === ResourceDiffType.Modified && !isIndetLine(line.original as string)) {
-                id++
-            }
+        if (name.startsWith('[indet]')) {
+            previous.group.isLeaf = lineIndent / INDENT >= leafTaxonIndex
             continue
         }
 
-        const parentId = parents.reduce((grandparent, parent) => parent || grandparent, null)
+        const parentId = parents.reduce((grandparent, parent) => parent ?? grandparent, null)
         const parent = parentId === null ? {} as WorkingTaxon : data[parentId]
-        const name = (line.text as string).slice(groupIndent)
-        const rank = resource.metadata.levels[groupIndent / 2]
-        const item = parseName(name, rank, parent)
-        const isSynonym = item.taxonomicStatus !== 'accepted'
+        const rank = resource.metadata.levels[parents.length]
+        let item
+
+        try {
+            item = parseName(name, rank, parent)
+        } catch (error) {
+            errors.push(makeParseError(error.message, lineNumber))
+            continue
+        }
 
         // Add higher classification info
         const itemAsObject = item as { [index: string]: unknown }
@@ -235,15 +234,7 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
             item.subgenus = item.infragenericEpithet
         }
 
-        if (isSynonym) {
-            item.higherClassification = parent.higherClassification
-        } else if (parent.higherClassification) {
-            item.higherClassification = parent.higherClassification + ` | ${parent.scientificNameOnly}`
-        } else if (parentId) {
-            item.higherClassification = parent.scientificNameOnly
-        }
-
-        // Amend "parent" with corrections
+        // Amend "parent" with corrections, exit
         if (item.taxonomicStatus === 'incorrect') {
             parent.incorrect = { ...parent }
             for (const key in item) {
@@ -254,40 +245,65 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
             continue
         }
 
-        // Set identifiers
-        if (line.type === ResourceDiffType.Added) {
-            newIdOffset++
-            item.scientificNameID = idBase + newIdOffset.toString()
-        } else if (line.type === ResourceDiffType.Modified && isIndetLine(line.original as string)) {
-            newIdOffset++
-            item.scientificNameID = idBase + newIdOffset.toString()
-        } else {
-            id++
-            item.scientificNameID = idBase + (oldIds[id - 1] || id).toString()
+        // Add more classification info
+        const isSynonym = item.taxonomicStatus !== 'accepted'
+        if (isSynonym) {
+            item.higherClassification = parent.higherClassification
+        } else if (parent.higherClassification) {
+            item.higherClassification = parent.higherClassification + ` | ${parent.scientificNameOnly}`
+        } else if (parentId) {
+            item.higherClassification = parent.scientificNameOnly
         }
-        previousId = item.scientificNameID
+
+        // Set identifiers
+        item.scientificNameID = `${resource.id}:${hasOriginalId ? (oldIds[id - 1] ?? id) : ++newId}`
 
         item.parentNameUsageID = isSynonym ? undefined : parent.scientificNameID
         item.parentNameUsage = isSynonym ? undefined : parent.scientificName
         item.acceptedNameUsageID = isSynonym ? parent.scientificNameID : undefined
         item.acceptedNameUsage = isSynonym ? parent.scientificName : undefined
-        item.collectionCode = idBase.slice(0, -1)
+        item.collectionCode = resource.id
 
         data[item.scientificNameID] = item
+
+        // Update loop state
+        previous.id = item.scientificNameID
+        if (item.taxonomicStatus === 'accepted') {
+            previous.group.indent = previous.indent
+            previous.group.isLeaf = lineIndent / INDENT >= leafTaxonIndex
+        }
+    }
+
+    if (errors.length) {
+        throw mergeParserErrors(errors)
     }
 
     return resource
 }
 
-function splitResources (file: string): string[] {
-    return file.split('\n\n===\n\n')
+interface FilePart {
+    content: string
+    offsetLine: number
+}
+
+function splitResources (file: string): FilePart[] {
+    const resources: FilePart[] = []
+    let offsetLine = 0
+    for (const content of file.split(RESOURCE_DELIMITER)) {
+        resources.push({ content, offsetLine })
+        offsetLine += (content + RESOURCE_DELIMITER).split('\n').length - 1
+    }
+    return resources
 }
 
 export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Resource[] {
     const oldResources = old ? splitResources(old.txt) : []
-    return splitResources(file).map((resource, index) => {
-        const [config, content] = parseResource(resource)
-        validateResource(config, content)
+    const newResources = splitResources(file)
+    const resources: Resource[] = []
+    const errors = []
+
+    for (let index = 0; index < newResources.length; index++) {
+        const [config, content] = parseResource(newResources[index])
         const template: Resource = {
             id: `${id}:${index + 1}`,
             file: `${id}-${index + 1}`,
@@ -298,11 +314,11 @@ export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Res
 
         let diff
         if (oldResources[index]) {
-            diff = createDiff(content, parseResource(oldResources[index])[1])
+            diff = createDiff(content.content, parseResource(oldResources[index])[1].content)
             // Ignore empty lines
             diff = diff.filter(line => line.text !== '')
         } else {
-            diff = createDiff(content, content)
+            diff = createDiff(content.content, content.content)
         }
 
         const oldIds = []
@@ -312,8 +328,18 @@ export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Res
             }
         }
 
-        return parseResourceContent(diff, template, oldIds)
-    })
+        try {
+            resources.push(parseResourceContent(diff, template, oldIds, content.offsetLine))
+        } catch (error) {
+            errors.push(error)
+        }
+    }
+
+    if (errors.length) {
+        throw mergeParserErrors(errors)
+    }
+
+    return resources
 }
 
 export function parseFileHeader (file: string): ResourceMetadata[] {
