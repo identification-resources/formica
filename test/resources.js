@@ -299,4 +299,24 @@ Scolia 5-punctata FABRICIUS, 1781
         assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Scolia quinquepunctata Fabricius, 1781')
         assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, 'Scolia 5-punctata FABRICIUS, 1781')
     })
+
+    await test('make correct diff when last line changes', (t) => {
+        const newText = `---
+levels: [species]
+---
+
+Bittacus Hageni Brauer
+  > Bittacus hageni Brauer
+`
+        const oldText = `---
+levels: [genus, species]
+---
+
+Bittacus hageni Brauer
+`
+
+        const [resource] = resources.parseTextFile(newText, 'T1', { txt: oldText, dwc: [[null, ['T:1:1'], ['T:1:2']]] })
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Bittacus hageni Brauer')
+        assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, 'Bittacus Hageni Brauer')
+    })
 })

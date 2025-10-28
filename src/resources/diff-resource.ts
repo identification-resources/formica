@@ -189,34 +189,38 @@ function getWordTokensFromLines (lines: ResourceDiff): string[] {
     return lines.flatMap(change => tokenizeWords(change.text as string).concat('\n'))
 }
 
+type MultilineDiffPart = { added: ResourceDiff, deleted: ResourceDiff }
+
+function mergeDiffPart (diffPart: MultilineDiffPart): ResourceDiff {
+    if (diffPart.added.length && diffPart.deleted.length) {
+        return convertWordDiff(diffTokens(getWordTokensFromLines(diffPart.added), getWordTokensFromLines(diffPart.deleted)))
+    } else if (diffPart.added.length) {
+        return diffPart.added
+    } else if (diffPart.deleted.length) {
+        return diffPart.deleted.map(change => ({ text: undefined, original: change.text, type: change.type }))
+    } else {
+        return []
+    }
+}
+
 export function createDiff (a: string, b: string): ResourceDiff {
     const lines: ResourceDiff = diffTokens(tokenizeLines(a.trimEnd()), tokenizeLines(b.trimEnd()))
 
     const changes: ResourceDiff = []
-    const diffPart: Record<string, ResourceDiff> = { added: [], deleted: [] }
+    const diffPart: MultilineDiffPart = { added: [], deleted: [] }
     for (let i = 0; i < lines.length; i++) {
         if (lines[i].type === ResourceDiffType.Added) {
             diffPart.added.push(lines[i])
-            continue
         } else if (lines[i].type === ResourceDiffType.Deleted) {
             diffPart.deleted.push(lines[i])
-            continue
-        }
-
-        if (diffPart.added.length && diffPart.deleted.length) {
-            changes.push(...convertWordDiff(diffTokens(getWordTokensFromLines(diffPart.added), getWordTokensFromLines(diffPart.deleted))))
+        } else {
+            changes.push(...mergeDiffPart(diffPart), lines[i])
             diffPart.added.length = 0
             diffPart.deleted.length = 0
-        } else if (diffPart.added.length) {
-            changes.push(...diffPart.added)
-            diffPart.added.length = 0
-        } else if (diffPart.deleted.length) {
-            changes.push(...diffPart.deleted.map(change => ({ text: undefined, original: change.text, type: change.type })))
-            diffPart.deleted.length = 0
         }
-
-        changes.push(lines[i])
     }
+
+    changes.push(...mergeDiffPart(diffPart))
 
     return changes
 }
