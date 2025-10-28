@@ -257,4 +257,46 @@ Polistes Latreille, 1802
         assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Polistes Latreille, 1802')
         assert.strictEqual(resource.taxa['T1:1:2'].genericName, 'Polistes')
     })
+
+    await test('parses invalid but corrected name', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [species]
+---
+
+Crabro Kiesenwetteri A. Morawitz. 1866
+  > Crabro kiesenwetteri A. Morawitz. 1866
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Crabro kiesenwetteri A. Morawitz. 1866')
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificNameAuthorship, 'A. Morawitz. 1866')
+        assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, 'Crabro Kiesenwetteri A. Morawitz. 1866')
+    })
+
+    await test('parses children of invalid but corrected name', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus, species]
+---
+
+Pirus L.
+  > Pyrus L.
+  aucuparia Gaertn.
+  Pirus domestica Sm.
+  Pirus aria Ehrh.
+    > Pyrus aria Ehrh.
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Pyrus aucuparia Gaertn.')
+        assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Pyrus domestica Sm.')
+        assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Pyrus aria Ehrh.')
+    })
+
+    await test('does not keep parts of invalid but corrected name', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [species]
+---
+
+Scolia 5-punctata FABRICIUS, 1781
+  > Scolia quinquepunctata FABRICIUS, 1781
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Scolia quinquepunctata Fabricius, 1781')
+        assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, 'Scolia 5-punctata FABRICIUS, 1781')
+    })
 })

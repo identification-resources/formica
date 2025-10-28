@@ -1,7 +1,7 @@
 import * as yaml from 'js-yaml'
 import { WorkResource } from './resource'
 import { createDiff, ResourceDiffType } from './diff-resource'
-import { parseName, RANKS } from './parse-name'
+import { parseName, RANKS, RecoverableSyntaxError } from './parse-name'
 
 const MAIN_RANKS: Rank[] = [
     'kingdom',
@@ -144,7 +144,7 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
     let lineNumber = offsetLine
 
     const parents: Array<TaxonId | null> = []
-    const previous = { id: '', indent: 0, group: { isLeaf: false, indent: 0 } }
+    const previous = { id: '', indent: 0, group: { isLeaf: false, indent: 0 }, errors: <SyntaxError[]>[] }
 
     for (const line of content) {
         const hasOriginalId = line.type !== ResourceDiffType.Added && !/^\s*(\[indet\]|> )/.test(line.original ?? line.text as string)
@@ -170,7 +170,6 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
             continue
         } else if (lineIndent <= previous.group.indent && (data[previous.id] && !previous.group.isLeaf)) {
             errors.push(makeParseError('Missing leaf taxon', lineNumber - 1))
-            continue
         }
 
         // Update parentage
@@ -198,20 +197,28 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         // Do not process "indet" lines further, as they only serve to indicate
         // that subtaxa are explicitely omitted
         if (name.startsWith('[indet]')) {
+            errors.push(...previous.errors)
+            previous.errors.length = 0
             previous.group.isLeaf = lineIndent / INDENT >= leafTaxonIndex
             continue
         }
 
         const parentId = parents.reduce((grandparent, parent) => parent ?? grandparent, null)
         const parent = parentId === null ? {} as WorkingTaxon : data[parentId]
-        const rank = resource.metadata.levels[parents.length]
         let item
+        const itemErrors = []
 
         try {
+            const rank = resource.metadata.levels[parents.length]
             item = parseName(name, rank, parent)
         } catch (error) {
-            errors.push(makeParseError(error.message, lineNumber))
-            continue
+            if (error instanceof RecoverableSyntaxError) {
+                itemErrors.push(makeParseError(error.message, lineNumber))
+                item = error.result
+            } else {
+                errors.push(makeParseError(error.message, lineNumber))
+                continue
+            }
         }
 
         // Add higher classification info
@@ -236,12 +243,26 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
 
         // Amend "parent" with corrections, exit
         if (item.taxonomicStatus === 'incorrect') {
+            if (parent.incorrect) {
+                errors.push(makeParseError('Cannot apply a correction to a previous correction', lineNumber))
+                continue
+            } else if (parentId === null) {
+                errors.push(makeParseError('Cannot apply a correction to nothing', lineNumber))
+                continue
+            }
+
             parent.incorrect = { ...parent }
             for (const key in item) {
                 if (key !== 'taxonomicStatus' && key !== 'verbatimIdentification') {
                     parentAsObject[key] = itemAsObject[key]
                 }
             }
+
+            // If "parent" is corrected, its errors can be dropped
+            previous.errors.length = 0
+            // ...but errors associated with the corrected name are added immediately
+            errors.push(...itemErrors)
+
             continue
         }
 
@@ -267,6 +288,8 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         data[item.scientificNameID] = item
 
         // Update loop state
+        errors.push(...previous.errors)
+        previous.errors = itemErrors
         previous.id = item.scientificNameID
         if (item.taxonomicStatus === 'accepted') {
             previous.group.indent = previous.indent
@@ -274,6 +297,7 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         }
     }
 
+    errors.push(...previous.errors)
     if (errors.length) {
         throw mergeParserErrors(errors)
     }

@@ -1,3 +1,12 @@
+export class RecoverableSyntaxError<Result> extends SyntaxError {
+    result: Result
+
+    constructor (message: string, result: Result) {
+        super(message)
+        this.result = result
+    }
+}
+
 export const RANKS: Rank[] = [
     'phylum',
     'subphylum',
@@ -278,28 +287,32 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
     item.scientificNameAuthorship = capitalizeAuthors(citation)
     item.taxonRemarks = notes
     item.taxonRank = rank
+    item.genericName = undefined
+    item.infragenericEpithet = undefined
+    item.specificEpithet = undefined
+    item.infraspecificEpithet = undefined
 
     if (/[^\p{L}0-9\u{00D7}\- ]/u.test(taxon)) {
-        throw new Error(`Taxon name contains unexpected characters: "${taxon}"`)
+        throw new RecoverableSyntaxError(`Taxon name contains unexpected characters: "${taxon}"`, item)
     }
 
     // Validate names and recompose binomial and trinomial names
     if (compareRanks('genus', rank) > 0) {
         item.scientificName = capitalize(taxon)
         if (taxon[0].toUpperCase() !== taxon[0]) {
-            throw new Error(`Taxon name (${rank}) should be capitalized: "${taxon}"`)
+            throw new RecoverableSyntaxError(`Taxon name (${rank}) should be capitalized: "${taxon}"`, item)
         }
     } else if (rank === 'genus') {
         item.scientificName = capitalizeGenericName(taxon)
         if (taxon[0].toUpperCase() !== taxon[0] || (taxon[0] === HYBRID_SIGN && taxon[1].toUpperCase() !== taxon[1])) {
-            throw new Error(`Generic epithet should be capitalized: "${taxon}"`)
+            throw new RecoverableSyntaxError(`Generic epithet should be capitalized: "${taxon}"`, item)
         }
     } else if (compareRanks('group', rank) > 0) {
         item.genericName = parentContext.genus
         item.infragenericEpithet = parentContext.subgenus
         item.scientificName = capitalize(taxon)
         if (taxon[0].toUpperCase() !== taxon[0]) {
-            throw new Error(`Infrageneric epithet should be capitalized: "${taxon}"`)
+            throw new RecoverableSyntaxError(`Infrageneric epithet should be capitalized: "${taxon}"`, item)
         }
     } else if (rank === 'group') {
         item.genericName = parentContext.genus
@@ -307,8 +320,7 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
         const specificEpithet = taxon.toLowerCase().replace(/(-group)?$/, '')
         item.scientificName = `${item.genericName} ${specificEpithet}-group`
         if (taxon.toLowerCase() !== taxon) {
-            console.log(item, taxon)
-            throw new Error(`Group name should be lowercase: "${taxon}"`)
+            throw new RecoverableSyntaxError(`Group name should be lowercase: "${taxon}"`, item)
         }
     } else if (rank === 'subgroup') {
         item.genericName = parentContext.genus
@@ -316,8 +328,7 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
         const specificEpithet = taxon.toLowerCase().replace(/(-subgroup)?$/, '')
         item.scientificName = `${item.genericName} ${specificEpithet}-subgroup`
         if (taxon.toLowerCase() !== taxon) {
-            console.log(item, taxon)
-            throw new Error(`Subgroup name should be lowercase: "${taxon}"`)
+            throw new RecoverableSyntaxError(`Subgroup name should be lowercase: "${taxon}"`, item)
         }
     } else if (compareRanks('species', rank) > 0) {
         item.genericName = parentContext.genus
@@ -325,15 +336,13 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
         const specificEpithet = taxon.toLowerCase()
         item.scientificName = `${item.genericName} ${specificEpithet}`
         if (specificEpithet !== taxon) {
-            console.log(item, taxon)
-            throw new Error(`Subgroup name should be lowercase: "${taxon}"`)
+            throw new RecoverableSyntaxError(`Taxon name should be lowercase: "${taxon}"`, item)
         }
     } else if (rank === 'species') {
         item.genericName = parentContext.genus
         item.infragenericEpithet = parentContext.subgenus
         if (taxon.toLowerCase() !== taxon && !/^[A-Z][a-z]+ [a-z]+\xD7[A-Z][a-z]+ [a-z]+$/.test(taxon)) {
-            console.log(item, taxon)
-            throw new Error(`Specific epithet should be lowercase: "${taxon}"`)
+            throw new RecoverableSyntaxError(`Specific epithet should be lowercase: "${taxon}"`, item)
         }
         item.specificEpithet = taxon
         item.scientificName = `${item.genericName} ${item.specificEpithet}`
@@ -356,8 +365,7 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
         item.scientificName = nameParts.join(' ')
 
         if (item.infraspecificEpithet !== taxon) {
-            console.log(item, taxon)
-            throw new Error(`Infraspecific epithet should be lowercase: "${taxon}"`)
+            throw new RecoverableSyntaxError(`Infraspecific epithet should be lowercase: "${taxon}"`, item)
         }
     }
 
