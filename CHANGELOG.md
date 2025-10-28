@@ -1,3 +1,18 @@
+## [0.8.6](https://github.com/identification-resources/formica/compare/v0.8.5...v0.8.6) (2025-10-28)
+
+
+### Bug Fixes
+
+* **resources:** fix diffs if last line changes ([a86c3e9](https://github.com/identification-resources/formica/commit/a86c3e97ae31cf9d509fff4a7525d56c05f79752))
+* **resources:** fix recognition of subgenus synonyms ([4c52599](https://github.com/identification-resources/formica/commit/4c525991dafac83176b96b2e04c5c952d777ac08))
+
+
+### Features
+
+* **resources:** ignore errors in later-corrected names ([4c1f69e](https://github.com/identification-resources/formica/commit/4c1f69e81450664f122cdf00e68cb918248790e6)), closes [#5](https://github.com/identification-resources/formica/issues/5)
+
+
+
 ## [0.8.5](https://github.com/identification-resources/formica/compare/v0.8.4...v0.8.5) (2025-10-28)
 
 
