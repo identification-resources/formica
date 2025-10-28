@@ -1,3 +1,22 @@
+## [0.8.5](https://github.com/identification-resources/formica/compare/v0.8.4...v0.8.5) (2025-10-28)
+
+
+### Bug Fixes
+
+* **catalog:** add mapping for typo 'male' in linked data ([a83d34e](https://github.com/identification-resources/formica/commit/a83d34e7aa57a78e410e2ea55adbf75e522d9028))
+* **catalog:** fix dcmitype: for algorithms, checklists ([68e353d](https://github.com/identification-resources/formica/commit/68e353d71d632e092e3e79254e6b4f575c004f1c))
+* **catalog:** fix typos in linked data generation ([9ad951f](https://github.com/identification-resources/formica/commit/9ad951f5c19978509c6aba7fd81470270707da99))
+* **resources:** add scientific name for complexes, aggregates ([843afc3](https://github.com/identification-resources/formica/commit/843afc39df1952dda4bb6339ee47f2619432bb74))
+* **resources:** omit generic error stack trace ([c831bc2](https://github.com/identification-resources/formica/commit/c831bc2a952ef17a9e57b012fe0568e2acc0c6ae))
+
+
+### Features
+
+* **resources:** handle subgenus synonyms of genera ([4e61336](https://github.com/identification-resources/formica/commit/4e61336e36054ffd6df57ebad5479e7ceebcb235)), closes [#16](https://github.com/identification-resources/formica/issues/16)
+* **resources:** rework parsing of resources ([cff7730](https://github.com/identification-resources/formica/commit/cff773000c5b9e3f990c619cdd45a76a18ee39a9)), closes [#15](https://github.com/identification-resources/formica/issues/15) [#7](https://github.com/identification-resources/formica/issues/7)
+
+
+
 ## [0.8.4](https://github.com/identification-resources/formica/compare/v0.8.3...v0.8.4) (2025-09-19)
 
 
