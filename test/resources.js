@@ -3,8 +3,8 @@ const assert = require('assert')
 
 const { catalog, resources } = require('../lib')
 
-suite('catalog', async (t) => {
-    await test('reports missing required fields', (t) => {
+suite('catalog', () => {
+    test('reports missing required fields', () => {
         const errors = catalog.loadData(`id
 B1`, 'catalog').validate()
         assert.deepStrictEqual(errors, [
@@ -18,8 +18,8 @@ B1`, 'catalog').validate()
     })
 })
 
-suite('resources', async (t) => {
-    await test('parses author with initials', (t) => {
+suite('resources', () => {
+    test('parses author with initials', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [family, genus, species]
 ---
@@ -33,7 +33,7 @@ Sphecidae A. Costa, 1886
         assert.deepStrictEqual(Object.values(resource.taxa).map(taxon => taxon.scientificNameAuthorship), Array(3).fill('A. Costa, 1886'))
     })
 
-    await test('parses synonyms starting with intraspecific ranks', (t) => {
+    test('parses synonyms starting with intraspecific ranks', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [species]
 ---
@@ -44,7 +44,7 @@ Lygaeus equestris (Linnaeus, 1758)
         assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Lygaeus equestris f. lactans Horváth, 1899')
     })
 
-    await test('parses accepted taxa starting with intraspecific ranks', (t) => {
+    test('parses accepted taxa starting with intraspecific ranks', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [species, form]
 ---
@@ -55,7 +55,7 @@ Lygaeus equestris (Linnaeus, 1758)
         assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Lygaeus equestris f. lactans Horváth, 1899')
     })
 
-    await test('parses names containing non-ASCII characters', (t) => {
+    test('parses names containing non-ASCII characters', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [species]
 ---
@@ -65,7 +65,7 @@ Nematus fåhraei Thomson
         assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Nematus fåhraei Thomson')
     })
 
-    await test('parses synonyms in different genera', (t) => {
+    test('parses synonyms in different genera', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [species]
 ---
@@ -77,7 +77,7 @@ Katamenes arbustorum subsp. burlinii
         assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Eumenes arbustorum var. burlinii')
     })
 
-    await test('parses species without generic names', (t) => {
+    test('parses species without generic names', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [genus, subgenus, species]
 ---
@@ -89,7 +89,7 @@ Microdynerus Thomson, 1874
         assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Microdynerus microdynerus (Dalla Torre, 1889)')
     })
 
-    await test('parses hybrids', (t) => {
+    test('parses hybrids', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [species]
 ---
@@ -101,7 +101,7 @@ Tilia x vulgaris
         assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Tilia ×vulgaris')
     })
 
-    await test('parses cross-genus hybrids', (t) => {
+    test('parses cross-genus hybrids', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [genus, species]
 ---
@@ -116,7 +116,7 @@ x Festulpia
         assert.strictEqual(resource.taxa['T1:1:3'].scientificName, '×Festulpia Festuca rubra×Vulpia bromoides')
     })
 
-    await test('parses cross-genus hybrids without parent context', (t) => {
+    test('parses cross-genus hybrids without parent context', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [species]
 ---
@@ -127,7 +127,7 @@ x Festulpia Festuca_rubra x Vulpia_bromoides
         assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, '× Festulpia Festuca rubra × Vulpia bromoides')
     })
 
-    await test('handles skips in ranks', (t) => {
+    test('handles skips in ranks', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [family, genus, species]
 ---
@@ -140,7 +140,7 @@ Apidae
         assert.strictEqual(resource.taxa['T1:1:2'].taxonRank, 'species')
     })
 
-    await test('parses genera with subgenus-rank synonyms', (t) => {
+    test('parses genera with subgenus-rank synonyms', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [genus]
 ---
@@ -153,7 +153,7 @@ Ectemnius Dahlbom
         assert.strictEqual(resource.taxa['T1:1:2'].genericName, 'Crabro')
     })
 
-    await test('parses genera with like-name subgenera', (t) => {
+    test('parses genera with like-name subgenera', () => {
         const [resource] = resources.parseTextFile(`---
 levels: [genus, subgenus]
 ---
@@ -166,8 +166,8 @@ Polistes Latreille, 1802
         assert.strictEqual(resource.taxa['T1:1:2'].genericName, 'Polistes')
     })
 
-    await suite('leaf taxa checks', async (t) => {
-        await test('errors for missing leaf taxa', (t) => {
+    suite('leaf taxa checks', () => {
+        test('errors for missing leaf taxa', () => {
             assert.throws(() => {
                 resources.parseTextFile(`---
 levels: [family, genus, species]
@@ -180,7 +180,7 @@ Cydnidae
             })
         })
 
-        await test('does not validate "indet." lines', (t) => {
+        test('does not validate "indet." lines', () => {
             const [resource] = resources.parseTextFile(`---
 levels: [genus, species]
 ---
@@ -191,7 +191,7 @@ Drymus
             assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Drymus')
         })
 
-        await test('synonyms do not break recognition of missing leaf taxa (1)', (t) => {
+        test('synonyms do not break recognition of missing leaf taxa (1)', () => {
             const [resource] = resources.parseTextFile(`---
 levels: [genus, subgenus, species]
 ---
@@ -204,7 +204,7 @@ Bombus
             assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Bombus pascuorum')
         })
 
-        await test('synonyms do not break recognition of missing leaf taxa (2)', (t) => {
+        test('synonyms do not break recognition of missing leaf taxa (2)', () => {
             assert.throws(() => {
             resources.parseTextFile(`---
 levels: [genus, subgenus, species]
@@ -219,7 +219,7 @@ Bombus
             })
         })
 
-        await test('synonyms do not break recognition of missing leaf taxa (3)', (t) => {
+        test('synonyms do not break recognition of missing leaf taxa (3)', () => {
             assert.throws(() => {
                 resources.parseTextFile(`---
 levels: [family, genus, species]
@@ -235,8 +235,8 @@ Cydnidae
         })
     })
 
-    await suite('corrections', async (t) => {
-        await test('outputs corrected generic names', (t) => {
+    suite('corrections', () => {
+        test('outputs corrected generic names', () => {
             const [resource] = resources.parseTextFile(`---
 levels: [genus, species]
 ---
@@ -249,7 +249,7 @@ Bogdania Kerzhner, 1964
             assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Bogdiana myrmica Kerzhner, 1964')
         })
 
-        await test('does not validate name with correction', (t) => {
+        test('does not validate name with correction', () => {
             const [resource] = resources.parseTextFile(`---
 levels: [species]
 ---
@@ -261,7 +261,7 @@ Clytochrysus lapidarius (Panzer, 1804)
             assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Clytochrysus lapidarius (Panzer, 1804)')
         })
 
-        await test('parses invalid but corrected name', (t) => {
+        test('parses invalid but corrected name', () => {
             const [resource] = resources.parseTextFile(`---
 levels: [species]
 ---
@@ -274,7 +274,7 @@ Crabro Kiesenwetteri A. Morawitz. 1866
             assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, 'Crabro Kiesenwetteri A. Morawitz. 1866')
         })
 
-        await test('parses children of invalid but corrected name', (t) => {
+        test('parses children of invalid but corrected name', () => {
             const [resource] = resources.parseTextFile(`---
 levels: [genus, species]
 ---
@@ -291,7 +291,7 @@ Pirus L.
             assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Pyrus aria Ehrh.')
         })
 
-        await test('does not keep parts of invalid but corrected name', (t) => {
+        test('does not keep parts of invalid but corrected name', () => {
             const [resource] = resources.parseTextFile(`---
 levels: [species]
 ---
@@ -303,7 +303,7 @@ Scolia 5-punctata FABRICIUS, 1781
             assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, 'Scolia 5-punctata FABRICIUS, 1781')
         })
 
-        await test('make correct diff when last line changes', (t) => {
+        test('make correct diff when last line changes', () => {
             const newText = `---
 levels: [species]
 ---
@@ -323,7 +323,7 @@ Bittacus hageni Brauer
             assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, 'Bittacus Hageni Brauer')
         })
 
-        await test('corrections of synonyms are correctly applied', (t) => {
+        test('corrections of synonyms are correctly applied', () => {
             const [resource] = resources.parseTextFile(`---
 levels: [genus, subgenus, species]
 ---
@@ -337,7 +337,7 @@ Lasius F.
             assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Lasius fuliginosus Latr.')
         })
 
-        await test('corrections are correctly applied', (t) => {
+        test('corrections are correctly applied', () => {
             const [resource] = resources.parseTextFile(`---
 levels: [genus, species]
 ---
