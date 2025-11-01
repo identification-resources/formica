@@ -243,6 +243,11 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
 
         // Amend "parent" with corrections, exit
         if (item.taxonomicStatus === 'incorrect') {
+            if (parent.taxonomicStatus !== 'accepted') {
+                // Remove corrected synonym from parentage
+                parents[parents.length - 1] = null
+            }
+
             if (parent.incorrect) {
                 errors.push(makeParseError('Cannot apply a correction to a previous correction', lineNumber))
                 continue

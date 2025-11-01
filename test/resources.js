@@ -319,4 +319,31 @@ Bittacus hageni Brauer
         assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Bittacus hageni Brauer')
         assert.strictEqual(resource.taxa['T1:1:1'].verbatimIdentification, 'Bittacus Hageni Brauer')
     })
+
+    await test('corrections of synonyms are correctly applied', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus, subgenus, species]
+---
+
+Lasius F.
+  = Domisthorpea Mor. & Drnt., 1915
+    > Donisthorpea Mor. & Drnt., 1915
+    fuliginosus Latr.
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Donisthorpea Mor. & Drnt., 1915')
+        assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Lasius fuliginosus Latr.')
+    })
+
+    await test('corrections are correctly applied', (t) => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus, species]
+---
+
+Neopachygaster Austin, 1901
+  > Neopachygaster Austen, 1901
+  meromelas (Dufour, 1841)
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Neopachygaster Austen, 1901')
+        assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Neopachygaster meromelas (Dufour, 1841)')
+    })
 })
