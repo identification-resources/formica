@@ -1,3 +1,12 @@
+## [0.8.7](https://github.com/identification-resources/formica/compare/v0.8.6...v0.8.7) (2025-11-01)
+
+
+### Bug Fixes
+
+* **resources:** fix handling of corrections ([49c05b4](https://github.com/identification-resources/formica/commit/49c05b499262e64514b832313360d1e6a4cc6378))
+
+
+
 ## [0.8.6](https://github.com/identification-resources/formica/compare/v0.8.5...v0.8.6) (2025-10-28)
 
 
