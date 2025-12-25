@@ -1,3 +1,12 @@
+## [0.8.8](https://github.com/identification-resources/formica/compare/v0.8.7...v0.8.8) (2025-12-25)
+
+
+### Features
+
+* **resources:** add 'subclass' rank ([4b10405](https://github.com/identification-resources/formica/commit/4b10405b32840c1675caf7ef24bf2bbfd821a236))
+
+
+
 ## [0.8.7](https://github.com/identification-resources/formica/compare/v0.8.6...v0.8.7) (2025-11-01)
 
 
