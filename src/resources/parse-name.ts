@@ -11,6 +11,7 @@ export const RANKS: Rank[] = [
     'phylum',
     'subphylum',
     'class',
+    'subclass',
     'infraclass',
     'superorder',
     'order',
