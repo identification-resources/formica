@@ -1,3 +1,18 @@
+# [0.9.0](https://github.com/identification-resources/formica/compare/v0.8.8...v0.9.0) (2026-02-04)
+
+
+### Bug Fixes
+
+* **resources:** improve taxonomic status ([0ea8fd2](https://github.com/identification-resources/formica/commit/0ea8fd220571f5f6ff05f517069aba10148c6888))
+
+
+### Features
+
+* **resources:** include cluster data in DwC files ([60a28ac](https://github.com/identification-resources/formica/commit/60a28ace18b0760696735ca416a2e8d014d1c928))
+* **resources:** include uncertainty of synonymy in DwC if specified ([03b6734](https://github.com/identification-resources/formica/commit/03b6734851dc9c331ec88fab21e90ad3f0303c3c))
+
+
+
 ## [0.8.8](https://github.com/identification-resources/formica/compare/v0.8.7...v0.8.8) (2025-12-25)
 
 
