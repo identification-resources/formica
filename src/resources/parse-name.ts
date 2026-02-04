@@ -42,7 +42,7 @@ export const RANKS: Rank[] = [
 
 const TAXONOMIC_STATUS: Record<string, TaxonStatus> = {
     '>': 'incorrect',
-    '+': 'heterotypic synonym',
+    '+': 'proparte synonym',
     '=': 'synonym'
 }
 
@@ -378,6 +378,10 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
     item.scientificNameOnly = item.scientificName
     if (item.scientificNameAuthorship) {
         item.scientificName += ` ${item.scientificNameAuthorship}`
+    }
+
+    if (isSynonym && /^auctt?\./.test(item.taxonRemarks)) {
+        item.taxonomicStatus = 'misapplied'
     }
 
     return item
