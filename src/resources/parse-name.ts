@@ -175,7 +175,11 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
     const isSynonym = /^[+=>] /.test(name)
     if (isSynonym) {
         item.taxonomicStatus = TAXONOMIC_STATUS[name[0]]
-        name = name.replace(/^[+=>] (\? ?)?/, '')
+        name = name.slice(2)
+        if (/^\? ?/.test(name)) {
+            item.dynamicProperties = '{"synonymUncertain":true}'
+            name = name.replace(/^\? ?/, '')
+        }
         rank = getSynonymRank(name, parent.taxonRank as Rank)
     } else {
         item.taxonomicStatus = 'accepted'

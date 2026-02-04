@@ -147,18 +147,20 @@ function getTaxonChildren (parent: TaxonId|undefined, taxa: Record<TaxonId, Work
 function processClusters (taxa: Record<TaxonId, WorkingTaxon>) {
     for (const id in taxa) {
         const taxon = taxa[id]
-        if (taxon.taxonomicStatus !== 'accepted') {
+        if (taxon.taxonomicStatus !== 'accepted' || !taxon.cluster) {
             continue
         }
 
+        const dynamicProperties = taxon.dynamicProperties ? JSON.parse(taxon.dynamicProperties) : {}
+
         if (taxon.cluster === '_') {
-            taxon.dynamicProperties = JSON.stringify({ identifiable: false })
-        } else if (taxon.cluster) {
+            dynamicProperties.identifiable = false
+        } else {
             const siblings = getTaxonChildren(taxon.parentNameUsageID, taxa).filter(sibling => sibling.scientificNameID !== id)
-            taxon.dynamicProperties = JSON.stringify({
-                indistinguishableFrom: siblings.filter(sibling => sibling.cluster === taxon.cluster).map(sibling => sibling.scientificNameID)
-            })
+            dynamicProperties.indistinguishableFrom = siblings.filter(sibling => sibling.cluster === taxon.cluster).map(sibling => sibling.scientificNameID)
         }
+
+        taxon.dynamicProperties = JSON.stringify(dynamicProperties)
     }
 }
 
