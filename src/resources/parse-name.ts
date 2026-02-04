@@ -123,6 +123,8 @@ const SUBGENUS_PATTERN = /^([A-Z]\S+) (?:\(([A-Z]\S+?)\))(?= |$)/
  */
 const BINAME_PATTERN = /^(?:((?:x )?[A-Z]\S+) (?:\(([A-Z]\S+?)\) )?)?(x [a-z-]+|[a-z-][^\s.]+(?: x [a-z-]+)?|[A-Z][a-z]+_[a-z-]+ x [A-Z][a-z]+_[a-z-]+)(?= |$)/
 
+const CLUSTER_PATTERN = /^\[(_|\d+)\] /
+
 function compareRanks (a: Rank, b: Rank): number {
     return RANKS.indexOf(a) - RANKS.indexOf(b)
 }
@@ -180,8 +182,10 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
     }
 
     // Clusters
-    if (/^\[(_|\d+)\] /.test(name)) {
-        name = name.replace(/^\[(_|\d+)\] /, '')
+    if (CLUSTER_PATTERN.test(name)) {
+        const [match, cluster] = name.match(CLUSTER_PATTERN) as string[]
+        item.cluster = cluster
+        name = name.slice(match.length)
     }
 
     // Set verbatim identification after subsequent syntax is removed.

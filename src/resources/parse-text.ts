@@ -134,6 +134,34 @@ function parseResource (resource: FilePart): [ResourceMetadata, FilePart] {
     return [config, { content, offsetLine }]
 }
 
+function getTaxonChildren (parent: TaxonId|undefined, taxa: Record<TaxonId, WorkingTaxon>): WorkingTaxon[] {
+    const children = []
+    for (const id in taxa) {
+        if (taxa[id].parentNameUsageID === parent) {
+            children.push(taxa[id])
+        }
+    }
+    return children
+}
+
+function processClusters (taxa: Record<TaxonId, WorkingTaxon>) {
+    for (const id in taxa) {
+        const taxon = taxa[id]
+        if (taxon.taxonomicStatus !== 'accepted') {
+            continue
+        }
+
+        if (taxon.cluster === '_') {
+            taxon.dynamicProperties = JSON.stringify({ identifiable: false })
+        } else if (taxon.cluster) {
+            const siblings = getTaxonChildren(taxon.parentNameUsageID, taxa).filter(sibling => sibling.scientificNameID !== id)
+            taxon.dynamicProperties = JSON.stringify({
+                indistinguishableFrom: siblings.filter(sibling => sibling.cluster === taxon.cluster).map(sibling => sibling.scientificNameID)
+            })
+        }
+    }
+}
+
 function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds: number[], offsetLine: number): Resource {
     const leafTaxonIndex = resource.metadata.levels.reduce((last, rank, i) => MAIN_RANKS.includes(rank) ? i : last, 0)
     const data = resource.taxa as Record<TaxonId, WorkingTaxon>
@@ -306,6 +334,8 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
     if (errors.length) {
         throw mergeParserErrors(errors)
     }
+
+    processClusters(data)
 
     return resource
 }

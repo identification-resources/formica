@@ -166,6 +166,27 @@ Polistes Latreille, 1802
         assert.strictEqual(resource.taxa['T1:1:2'].genericName, 'Polistes')
     })
 
+    test('handles clusters', () => {
+        const [resource] = resources.parseTextFile(`---
+levels: [genus, species]
+---
+
+Eurydema Laporte, 1833
+  oleracea (Linnaeus, 1758)
+  [1] rotundicollis (Dohrn, 1860)
+  [1] fieberi Schummel, 1837
+  [2] ornata (Linnaeus, 1758)
+  [2] ventralis Kolenati, 1846
+  [_] eckerleini Josifov, 1961
+`, 'T1')
+        assert.strictEqual(resource.taxa['T1:1:2'].dynamicProperties, undefined)
+        assert.strictEqual(resource.taxa['T1:1:3'].dynamicProperties, '{"indistinguishableFrom":["T1:1:4"]}')
+        assert.strictEqual(resource.taxa['T1:1:4'].dynamicProperties, '{"indistinguishableFrom":["T1:1:3"]}')
+        assert.strictEqual(resource.taxa['T1:1:5'].dynamicProperties, '{"indistinguishableFrom":["T1:1:6"]}')
+        assert.strictEqual(resource.taxa['T1:1:6'].dynamicProperties, '{"indistinguishableFrom":["T1:1:5"]}')
+        assert.strictEqual(resource.taxa['T1:1:7'].dynamicProperties, '{"identifiable":false}')
+    })
+
     suite('leaf taxa checks', () => {
         test('errors for missing leaf taxa', () => {
             assert.throws(() => {

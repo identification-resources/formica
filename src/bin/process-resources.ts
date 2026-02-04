@@ -44,6 +44,8 @@ const DWC_FIELDS: (keyof AmendedTaxon)[] = [
     'higherClassification',
     'verbatimIdentification',
 
+    'dynamicProperties',
+
     'colTaxonID',
     'gbifTaxonID',
     'colAcceptedTaxonID',

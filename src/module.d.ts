@@ -56,12 +56,14 @@ interface TaxonBase {
     subgenus?: string,
     higherClassification?: string,
     verbatimIdentification?: string,
+    dynamicProperties?: string,
 }
 
 interface WorkingTaxon extends TaxonBase {
     // Non-standard
     scientificNameOnly?: string,
-    incorrect?: WorkingTaxon
+    incorrect?: WorkingTaxon,
+    cluster?: string
 }
 
 interface Taxon extends TaxonBase {
