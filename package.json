@@ -34,7 +34,7 @@
   "dependencies": {
     "ietf-language-tag-regex": "^0.0.5",
     "js-yaml": "^4.1.0",
-    "jsonld": "^8.3.3",
+    "jsonld": "^9.0.0",
     "n3": "^1.25.2",
     "spdx-license-list": "^6.6.0"
   },
