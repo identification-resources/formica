@@ -106,7 +106,8 @@ const GBIF_RANKS = ['kingdom', 'phylum', 'class', 'order', 'family', 'genus', 's
 const GBIF_VOCAB_RANKS = ['domain', 'kingdom', 'subkingdom', 'superphylum', 'phylum', 'subphylum', 'superclass', 'class', 'subclass', 'supercohort', 'cohort', 'subcohort', 'superorder', 'order', 'suborder', 'infraorder', 'superfamily', 'family', 'subfamily', 'tribe', 'subtribe', 'genus', 'subgenus', 'section', 'subsection', 'series', 'subseries', 'speciesAggregate', 'species', 'subspecificAggregate', 'subspecies', 'variety', 'subvariety', 'form', 'subform', 'cultivarGroup', 'cultivar', 'strain']
 const STATUSES: Record<string, string> = {
     'accepted': 'http://rs.gbif.org/vocabulary/gbif/taxonomicStatus/accepted',
-    'heterotypic synonym': 'http://rs.gbif.org/vocabulary/gbif/taxonomicStatus/heterotypicSynonym',
+    'misapplied': 'http://rs.gbif.org/vocabulary/gbif/taxonomicStatus/misapplied',
+    'proparte synonym': 'http://rs.gbif.org/vocabulary/gbif/taxonomicStatus/proParteSynonym',
     'synonym': 'http://rs.gbif.org/vocabulary/gbif/taxonomicStatus/synonym',
 }
 
@@ -182,8 +183,8 @@ function makeTaxonRankUri (rank: string): NodeObject|string {
     }
 }
 
-function makeTaxonomicStatusUri (status: string): NodeObject {
-    return { '@id': STATUSES[status] as string }
+function makeTaxonomicStatusUri (status: keyof typeof STATUSES): NodeObject {
+    return { '@id': STATUSES[status] }
 }
 
 function makeLinkedDataForAuthor (author: catalog.Entity): NodeObject {
@@ -313,8 +314,10 @@ function makeLinkedDataForScientificName (name: AmendedTaxon): NodeObject {
         node[DWC_FIELDS.taxonRank] = makeTaxonRankUri(name.taxonRank)
     }
 
-    if (name.taxonomicStatus) {
+    if (name.taxonomicStatus in STATUSES) {
         node[DWC_FIELDS.taxonomicStatus] = makeTaxonomicStatusUri(name.taxonomicStatus)
+    } else {
+        console.error('Unmapped taxonomic status:', name.taxonomicStatus)
     }
 
     if (name.acceptedNameUsageID) {
