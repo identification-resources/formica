@@ -1,3 +1,15 @@
+## [0.9.1](https://github.com/identification-resources/formica/compare/v0.9.0...v0.9.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* **resources:** fix RDF mapping of taxonomic status ([c65383e](https://github.com/identification-resources/formica/commit/c65383e4d64c674c6c3b9f69e8cae925fcdf6896))
+
+
+### Features
+
+* **catalog:** add more validation for taxa ([2bbc017](https://github.com/identification-resources/formica/commit/2bbc0177f8d4a6909339cfee812c33873770f725))
+
 # [0.9.0](https://github.com/identification-resources/formica/compare/v0.8.8...v0.9.0) (2026-02-04)
 
 
@@ -11,8 +23,6 @@
 * **resources:** include cluster data in DwC files ([60a28ac](https://github.com/identification-resources/formica/commit/60a28ace18b0760696735ca416a2e8d014d1c928))
 * **resources:** include uncertainty of synonymy in DwC if specified ([03b6734](https://github.com/identification-resources/formica/commit/03b6734851dc9c331ec88fab21e90ad3f0303c3c))
 
-
-
 ## [0.8.8](https://github.com/identification-resources/formica/compare/v0.8.7...v0.8.8) (2025-12-25)
 
 
@@ -20,16 +30,12 @@
 
 * **resources:** add 'subclass' rank ([4b10405](https://github.com/identification-resources/formica/commit/4b10405b32840c1675caf7ef24bf2bbfd821a236))
 
-
-
 ## [0.8.7](https://github.com/identification-resources/formica/compare/v0.8.6...v0.8.7) (2025-11-01)
 
 
 ### Bug Fixes
 
 * **resources:** fix handling of corrections ([49c05b4](https://github.com/identification-resources/formica/commit/49c05b499262e64514b832313360d1e6a4cc6378))
-
-
 
 ## [0.8.6](https://github.com/identification-resources/formica/compare/v0.8.5...v0.8.6) (2025-10-28)
 
@@ -43,8 +49,6 @@
 ### Features
 
 * **resources:** ignore errors in later-corrected names ([4c1f69e](https://github.com/identification-resources/formica/commit/4c1f69e81450664f122cdf00e68cb918248790e6)), closes [#5](https://github.com/identification-resources/formica/issues/5)
-
-
 
 ## [0.8.5](https://github.com/identification-resources/formica/compare/v0.8.4...v0.8.5) (2025-10-28)
 
@@ -63,8 +67,6 @@
 * **resources:** handle subgenus synonyms of genera ([4e61336](https://github.com/identification-resources/formica/commit/4e61336e36054ffd6df57ebad5479e7ceebcb235)), closes [#16](https://github.com/identification-resources/formica/issues/16)
 * **resources:** rework parsing of resources ([cff7730](https://github.com/identification-resources/formica/commit/cff773000c5b9e3f990c619cdd45a76a18ee39a9)), closes [#15](https://github.com/identification-resources/formica/issues/15) [#7](https://github.com/identification-resources/formica/issues/7)
 
-
-
 ## [0.8.4](https://github.com/identification-resources/formica/compare/v0.8.3...v0.8.4) (2025-09-19)
 
 
@@ -78,16 +80,12 @@
 
 * **catalog:** map additional scope value ([80c6d26](https://github.com/identification-resources/formica/commit/80c6d269a7d5b03600991fb353280e81afcefb0e))
 
-
-
 ## [0.8.3](https://github.com/identification-resources/formica/compare/v0.8.2...v0.8.3) (2025-07-15)
 
 
 ### Features
 
 * **catalog:** add catalog field key_characteristics ([6529cfa](https://github.com/identification-resources/formica/commit/6529cfab81f759f926b81bdd9d5a36e84b526284))
-
-
 
 ## [0.8.2](https://github.com/identification-resources/formica/compare/v0.8.1...v0.8.2) (2025-06-26)
 
@@ -96,8 +94,6 @@
 
 * **resources:** add support for documented flag ([6cb89e4](https://github.com/identification-resources/formica/commit/6cb89e428bde8665b7e8f03b5c7f47a44e15f58e))
 * **resources:** allow hyphens in biname pattern ([6a58a77](https://github.com/identification-resources/formica/commit/6a58a77757b8b6ae8c2d7d01440775776d183d05))
-
-
 
 ## [0.8.1](https://github.com/identification-resources/formica/compare/v0.8.0...v0.8.1) (2025-05-30)
 
@@ -112,8 +108,6 @@
 
 * **resources:** add support for "(sub)gen. nov" pattern ([d2598eb](https://github.com/identification-resources/formica/commit/d2598ebfd2f80d9c2bcc00ce145b9fc229316e5b))
 
-
-
 # [0.8.0](https://github.com/identification-resources/formica/compare/v0.7.3...v0.8.0) (2025-05-07)
 
 
@@ -126,16 +120,12 @@
 
 * **catalog:** implement generation of linked data ([334616e](https://github.com/identification-resources/formica/commit/334616e2e12c0d91e49f84f06bdd00ab7a238b8e))
 
-
-
 ## [0.7.3](https://github.com/identification-resources/formica/compare/v0.7.2...v0.7.3) (2025-04-17)
 
 
 ### Features
 
 * **catalog:** update validation for identifiers ([156a703](https://github.com/identification-resources/formica/commit/156a7036ab09c411d091bc9d0f628831a30ba3f5))
-
-
 
 ## [0.7.2](https://github.com/identification-resources/formica/compare/v0.7.1...v0.7.2) (2025-04-02)
 
@@ -144,16 +134,12 @@
 
 * **catalog:** add validation for taxa.csv ([59cfcf2](https://github.com/identification-resources/formica/commit/59cfcf28ebbef42e28e648e800c178a7d528f37a))
 
-
-
 ## [0.7.1](https://github.com/identification-resources/formica/compare/v0.7.0...v0.7.1) (2025-03-25)
 
 
 ### Features
 
 * **resources:** add 'subphylum' rank ([8b5243b](https://github.com/identification-resources/formica/commit/8b5243bfd79b6486c613ca1178f1e1c9ec3f43a4))
-
-
 
 # [0.7.0](https://github.com/identification-resources/formica/compare/v0.6.8...v0.7.0) (2025-03-14)
 
@@ -172,8 +158,6 @@
 
 * **resources:** "indet" lines now have to be prefixed with "[indet]"
 
-
-
 ## [0.6.8](https://github.com/identification-resources/formica/compare/v0.6.7...v0.6.8) (2025-03-13)
 
 
@@ -182,8 +166,6 @@
 * **resources:** add support for intergeneric hybrids without parents ([3cb0c0c](https://github.com/identification-resources/formica/commit/3cb0c0cd60fc5a4ba88add623fbadc3b90d8530c))
 * **resources:** create index of CoL identifiers ([3792903](https://github.com/identification-resources/formica/commit/37929035374bc0c67ed2403e775e06a904bdbd4d))
 * **resources:** support intergeneric hybrids ([0a6696c](https://github.com/identification-resources/formica/commit/0a6696c5fd0603a0366c80c2298b6544636ed0c6))
-
-
 
 ## [0.6.7](https://github.com/identification-resources/formica/compare/v0.6.6...v0.6.7) (2025-02-26)
 
@@ -199,16 +181,12 @@
 
 * **resources:** add support for completeness flags ([55b5427](https://github.com/identification-resources/formica/commit/55b5427125b4f1072191cadbc461ba31d37e6f2e))
 
-
-
 ## [0.6.6](https://github.com/identification-resources/formica/compare/v0.6.5...v0.6.6) (2025-02-16)
 
 
 ### Features
 
 * **resources:** allow other resources in version_of ([85947b0](https://github.com/identification-resources/formica/commit/85947b0dcfbdb4bfd6537c628b34087a6e6326f7))
-
-
 
 ## [0.6.5](https://github.com/identification-resources/formica/compare/v0.6.4...v0.6.5) (2024-12-20)
 
@@ -219,8 +197,6 @@
 * **resources:** improve (ICBN) author parsing ([d3e3faf](https://github.com/identification-resources/formica/commit/d3e3faf411d1a7dccd528a5ee78bd0823a5883b4)), closes [#13](https://github.com/identification-resources/formica/issues/13) [#14](https://github.com/identification-resources/formica/issues/14)
 * **resources:** support "et al." in author name ([82993bf](https://github.com/identification-resources/formica/commit/82993bffac5e7f3ed00d00c28c836f347b264a43))
 
-
-
 ## [0.6.4](https://github.com/identification-resources/formica/compare/v0.6.3...v0.6.4) (2024-12-16)
 
 
@@ -228,16 +204,12 @@
 
 * **resources:** fix matching of some ICBN names ([3c18458](https://github.com/identification-resources/formica/commit/3c184586b64e2a31f1eb7298bcd7c80c1d119069))
 
-
-
 ## [0.6.3](https://github.com/identification-resources/formica/compare/v0.6.2...v0.6.3) (2024-04-12)
 
 
 ### Bug Fixes
 
 * **resources:** allow 'phylum' rank ([ff9be66](https://github.com/identification-resources/formica/commit/ff9be66abab79a86263764b54d6a2709833b14d4))
-
-
 
 ## [0.6.2](https://github.com/identification-resources/formica/compare/v0.6.1...v0.6.2) (2024-04-08)
 
@@ -251,16 +223,12 @@
 
 * **catalog:** add script to de-duplicate links ([b719348](https://github.com/identification-resources/formica/commit/b719348635e1b35ee80758c0cdd9938625d79ebf))
 
-
-
 ## [0.6.1](https://github.com/identification-resources/formica/compare/v0.6.0...v0.6.1) (2024-03-20)
 
 
 ### Bug Fixes
 
 * **resources:** allow two-part hybrid names ([8e3b836](https://github.com/identification-resources/formica/commit/8e3b8368985d1db35b62d306d833121150e91865))
-
-
 
 # [0.6.0](https://github.com/identification-resources/formica/compare/v0.5.2...v0.6.0) (2024-01-05)
 
@@ -269,8 +237,6 @@
 
 * **catalog:** add entry type, key type values ([ed6e4fb](https://github.com/identification-resources/formica/commit/ed6e4fb545e09cddb5d466f602bffb8a8483f043))
 
-
-
 ## [0.5.2](https://github.com/identification-resources/formica/compare/v0.5.1...v0.5.2) (2023-11-27)
 
 
@@ -278,16 +244,12 @@
 
 * **resources:** fix GBIF index generation ([c88e2d2](https://github.com/identification-resources/formica/commit/c88e2d2b306b930ca0b00b978e3eb89b8adfb656))
 
-
-
 ## [0.5.1](https://github.com/identification-resources/formica/compare/v0.5.0...v0.5.1) (2023-11-03)
 
 
 ### Bug Fixes
 
 * **resources:** fix file listing in processor ([009b980](https://github.com/identification-resources/formica/commit/009b98091b0f597e91213ace82252facbe3b5fed))
-
-
 
 # [0.5.0](https://github.com/identification-resources/formica/compare/v0.4.3...v0.5.0) (2023-10-24)
 
@@ -319,16 +281,12 @@
 does no longer pass validation. Use the "taxon_scope" and "scope" fields
 in "catalog" instead.
 
-
-
 ## [0.4.3](https://github.com/identification-resources/formica/compare/v0.4.2...v0.4.3) (2023-09-30)
 
 
 ### Bug Fixes
 
 * **resource:** fix regression in taxon parsing ([098477b](https://github.com/identification-resources/formica/commit/098477b5914324a3c15ec885617d4cf30996f30d))
-
-
 
 ## [0.4.2](https://github.com/identification-resources/formica/compare/v0.4.1...v0.4.2) (2023-09-30)
 
@@ -339,16 +297,12 @@ in "catalog" instead.
 * **resources:** correct synonym rank determintation ([766ea2a](https://github.com/identification-resources/formica/commit/766ea2af14ff3aa64a7a2e19ed096836d38182cf))
 * **resources:** do not parse "indet." lines as taxa ([f4debf6](https://github.com/identification-resources/formica/commit/f4debf695b0cdb375bfb60ab5ce942fa2f7dee85)), closes [#8](https://github.com/identification-resources/formica/issues/8)
 
-
-
 ## [0.4.1](https://github.com/identification-resources/formica/compare/v0.4.0...v0.4.1) (2023-09-07)
 
 
 ### Bug Fixes
 
 * **catalog:** fix typo in duplicate_of schema ([fbb6333](https://github.com/identification-resources/formica/commit/fbb6333d10dd6f5846856ea8de81d941ce539d21))
-
-
 
 # [0.4.0](https://github.com/identification-resources/formica/compare/v0.3.1...v0.4.0) (2023-09-07)
 
@@ -363,8 +317,6 @@ in "catalog" instead.
 
 * **catalog:** add duplicate_of field ([e4a8bbe](https://github.com/identification-resources/formica/commit/e4a8bbecef9c6a40d0f2cc5d4e8bb67685a453ff))
 
-
-
 ## [0.3.1](https://github.com/identification-resources/formica/compare/v0.3.0...v0.3.1) (2023-09-04)
 
 
@@ -373,8 +325,6 @@ in "catalog" instead.
 * **resources:** allow correction of synonyms of lowest taxa ([c737d5b](https://github.com/identification-resources/formica/commit/c737d5b09d5e5b24f4cc2c8cff88c9ada8d0ab7b))
 * **resources:** fix regression in c737d5b ([d4e52e9](https://github.com/identification-resources/formica/commit/d4e52e95ed1a35dabbd80b9f9aace1a824fdae98))
 * **resources:** handle corrections to synonyms ([21ed9b7](https://github.com/identification-resources/formica/commit/21ed9b79f77e1e6d0639d96ed9822d5212a85a2e)), closes [#4](https://github.com/identification-resources/formica/issues/4)
-
-
 
 # [0.3.0](https://github.com/identification-resources/formica/compare/v0.2.1...v0.3.0) (2023-08-20)
 
@@ -387,8 +337,6 @@ in "catalog" instead.
 * **resources:** improve taxon name matching ([78ff480](https://github.com/identification-resources/formica/commit/78ff480485ca42bd1d1f2893f230e61db6cb6be8)), closes [#2](https://github.com/identification-resources/formica/issues/2)
 * **resources:** test for rank mismatch ([0e69b7f](https://github.com/identification-resources/formica/commit/0e69b7f0a6654fa5255e797be7516cd06edb4df3)), closes [#2](https://github.com/identification-resources/formica/issues/2)
 
-
-
 ## [0.2.1](https://github.com/identification-resources/formica/compare/v0.2.0...v0.2.1) (2023-08-10)
 
 
@@ -396,8 +344,6 @@ in "catalog" instead.
 
 * **resources:** do not validate old versions ([1a8dd2e](https://github.com/identification-resources/formica/commit/1a8dd2e0e373489e287d1fd89dbb7443245c5214))
 * **resources:** fix check for missing leaf taxa ([035f1ad](https://github.com/identification-resources/formica/commit/035f1ad20efa80b388ec3828d4ace4518c7b344e))
-
-
 
 # [0.2.0](https://github.com/identification-resources/formica/compare/v0.1.1...v0.2.0) (2023-08-09)
 
@@ -407,16 +353,12 @@ in "catalog" instead.
 * **catalog:** add taxon_scope column ([6a06c37](https://github.com/identification-resources/formica/commit/6a06c37ec0640a8ffbc258ad6a4d81d84d35fee9))
 * **resources:** check for missing leaf taxa ([387c47d](https://github.com/identification-resources/formica/commit/387c47d10bb7f1fb09a68c10dfa869bb924b7633))
 
-
-
 ## [0.1.1](https://github.com/identification-resources/formica/compare/v0.1.0...v0.1.1) (2023-05-10)
 
 
 ### Bug Fixes
 
 * **processor:** add Node hashbang ([51dee57](https://github.com/identification-resources/formica/commit/51dee57b8547afba449b2b846bd7d65e7927368f))
-
-
 
 # [0.1.0](https://github.com/identification-resources/formica/compare/fed91fd6f350c47bd067d221a4d0e2278a199dae...v0.1.0) (2023-03-01)
 
@@ -439,6 +381,3 @@ in "catalog" instead.
 * **resources:** add support for hybrids ([e49e96a](https://github.com/identification-resources/formica/commit/e49e96af9c3958bab2a3b0508b1fc8a018b80716))
 * **validate:** add catalog validation script ([4cdf785](https://github.com/identification-resources/formica/commit/4cdf785afb2c77320cd9b5b76483e3464c0f1cff))
 * **validate:** add script to validate resources ([246fb5d](https://github.com/identification-resources/formica/commit/246fb5dd8da03e736884850874cc51a11be9985c))
-
-
-
