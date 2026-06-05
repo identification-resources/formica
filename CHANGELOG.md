@@ -1,3 +1,10 @@
+## [0.9.2](https://github.com/identification-resources/formica/compare/v0.9.1...v0.9.2) (2026-06-05)
+
+
+### Bug Fixes
+
+* **catalog:** check for ID uniqueness ([eed45ad](https://github.com/identification-resources/formica/commit/eed45ad6155a03474606d84daefddac4c1c63956))
+
 ## [0.9.1](https://github.com/identification-resources/formica/compare/v0.9.0...v0.9.1) (2026-04-21)
 
 
