@@ -73,6 +73,21 @@ async function validateFile (arg: string): Promise<WorkError[]> {
     const entities = catalog.loadData(file, sheet)
     const errors = entities.validate()
 
+    const ids = new Set()
+    for (const entity of entities) {
+        const id = entity.get('id') as string
+
+        if (ids.has(id)) {
+            errors.push({
+                entity: id,
+                field: 'id',
+                error: `ID "${id}" repeated`
+            })
+        } else {
+            ids.add(id)
+        }
+    }
+
     if (sheet === 'taxa') {
         const validator = new TaxaValidator(entities)
         errors.push(...validator.validate())
