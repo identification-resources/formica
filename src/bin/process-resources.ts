@@ -8,10 +8,16 @@ import * as util from 'util'
 import { csv } from '../index'
 import { prompt, promptForAnswers, numericSort, runCommand } from './util'
 
+export enum ResourceTaxonIdSource {
+    COL = 'col',
+    GBIF = 'gbif'
+}
+
 export enum ResourceProcessorSource {
     All = 'all',
     Unprocessed = 'unprocessed',
-    Modified = 'modified'
+    Modified = 'modified',
+    Dwc = 'dwc'
 }
 
 const DWC_FIELDS: (keyof AmendedTaxon)[] = [
@@ -74,9 +80,16 @@ const GBIF_RANKS: Rank[] = [
     'variety'
 ]
 
-function runGnverifier (names: string): Promise<string> {
+const GNVERIFIER_SOURCES: Record<ResourceTaxonIdSource, number> = {
+    gbif: 11,
+    col: 13
+}
+
+function runGnverifier (names: string, sources: ResourceTaxonIdSource[]): Promise<string> {
+    const sourceArg = sources.map(source => GNVERIFIER_SOURCES[source]).join()
+
     return new Promise((resolve, reject) => {
-        const proc = spawn('gnverifier', ['-s', '13,11', '-f', 'compact', '-M'])
+        const proc = spawn('gnverifier', ['-s', sourceArg, '-f', 'compact', '-M'])
         let stdout = ''
         proc.stdout.on('data', data => { stdout += data })
         proc.stderr.pipe(process.stdout)
@@ -132,15 +145,46 @@ class ResourceProcessor {
     }
 
     async run (source: ResourceProcessorSource, config: ResourceProcessorConfig): Promise<void> {
+        if (source === ResourceProcessorSource.Dwc) {
+            return this.runDwc(config)
+        }
+
         const ids = await this.listWorks(source)
         for (const id of ids) {
             await this.processWork(id, config)
         }
     }
 
+    async runDwc (config: ResourceProcessorConfig): Promise<void> {
+        const files = await fs.readdir(this.DIR_DWC)
+        files.sort(numericSort)
+
+        for (const file of files) {
+            const [workId, index] = path.basename(file, '.csv').split('-')
+            const resource: AmendedResource = {
+                id: `${workId}:${index}`,
+                file: `${workId}-${index}`,
+                workId,
+                metadata: { levels: [] },
+                taxa: {}
+            }
+
+            const filePath = path.join(this.DIR_DWC, file)
+            const [header, ...rows] = csv.parseCsv(await fs.readFile(filePath, 'utf-8'))
+            for (const row of rows) {
+                const taxon = Object.fromEntries(header.map((h, i) => [h, row[i]]))
+                resource.taxa[taxon.scientificNameID] = taxon as unknown as Taxon
+            }
+
+            await this.processResourceDwc(resource, config)
+            await this.writeResourceDwc(resource)
+        }
+    }
+
     async listWorks (source: ResourceProcessorSource): Promise<string[]> {
         switch (source) {
             case ResourceProcessorSource.All:
+            case ResourceProcessorSource.Dwc:
                 return listFiles(this.DIR_TXT)
             case ResourceProcessorSource.Unprocessed:
                 return listUnprocessedFiles(this.DIR_TXT, this.DIR_DWC)
@@ -154,17 +198,19 @@ class ResourceProcessor {
     async processWork (id: WorkId, config: ResourceProcessorConfig): Promise<void> {
         const resources = await this.processResources(id, config)
 
-        await Promise.all(resources.map(resource => {
-            const header = DWC_FIELDS
-            const table: string[][] = [header]
+        await Promise.all(resources.map(resource => this.writeResourceDwc(resource)))
+    }
 
-            for (const id in resource.taxa) {
-                const taxon = resource.taxa[id] as unknown as Record<string, string | undefined>
-                table.push(header.map(column => taxon[column] || ''))
-            }
+    async writeResourceDwc (resource: AmendedResource): Promise<void> {
+        const header = DWC_FIELDS
+        const table: string[][] = [header]
 
-            return fs.writeFile(path.join(this.DIR_DWC, `${resource.file}.csv`), csv.formatCsv(table, ',').trim())
-        }))
+        for (const id in resource.taxa) {
+            const taxon = resource.taxa[id] as unknown as Record<string, string | undefined>
+            table.push(header.map(column => taxon[column] || ''))
+        }
+
+        return fs.writeFile(path.join(this.DIR_DWC, `${resource.file}.csv`), csv.formatCsv(table, ',').trim())
     }
 
     async processResources (id: WorkId, config: ResourceProcessorConfig): Promise<AmendedResource[]> {
@@ -257,10 +303,13 @@ class ResourceProcessor {
         return dwc
     }
 
-    async processResourceDwc (resource: Resource, config: ResourceProcessorConfig): Promise<AmendedResource> {
+    async processResourceDwc (resource: Resource|AmendedResource, config: ResourceProcessorConfig): Promise<AmendedResource> {
         console.log(`${resource.workId}: matching ${resource.id}`)
 
-        if (!config.updateMappings) {
+        // If not all mappings will be rerun and the mappings are not already provided,
+        // read the existing DwC files and add the corresponding mappings.
+        const hasMappings = Object.values(resource.taxa).some(taxon => 'gbifAcceptedTaxonID' in taxon || 'colAcceptedTaxonID' in taxon)
+        if (!hasMappings && config.updateMappings.length < 2) {
             const file = path.join(this.DIR_DWC, resource.file + '.csv')
             if (doesFileExist(file)) {
                 const [header, ...rows] = csv.parseCsv(await fs.readFile(file, 'utf-8'))
@@ -278,6 +327,9 @@ class ResourceProcessor {
                     }
                 }
             }
+        }
+
+        if (config.updateMappings.length === 0) {
             return resource as AmendedResource
         }
 
@@ -294,7 +346,7 @@ class ResourceProcessor {
             filteredResults[id] = []
         }
 
-        const result = await runGnverifier(Array.from(names).join('\n'))
+        const result = await runGnverifier(Array.from(names).join('\n'), config.updateMappings)
         for (const results of result.trim().split('\n')) {
             interface MatchScoreDetails {
                 cardinalityScore: number;
@@ -349,6 +401,18 @@ class ResourceProcessor {
                         // Exclude matches with rank mismatches (only possible
                         // for non-synonyms).
                         continue
+                    }
+
+                    // https://github.com/gnames/gnverifier/issues/156
+                    if (source === 1 || source === 13 && match.recordId !== match.currentRecordId) {
+                        const [a, b, c] = match.recordId.split('|')
+                        if (b && c) {
+                            if (a !== c || b !== match.currentRecordId) {
+                                throw new Error(`Unexpected recordId format ${match.recordId}`)
+                            }
+
+                            match.recordId = a
+                        }
                     }
 
                     if (!filteredResults[loirId]) {
@@ -493,10 +557,38 @@ function main (): void {
             'keep-mappings': {
                 type: 'boolean',
                 short: 'k'
+            },
+            'update-mappings': {
+                type: 'string',
+                short: 'u',
+                multiple: true
             }
         },
         allowPositionals: true
     })
+
+    if (!Object.values(ResourceProcessorSource).includes(args.values.source as ResourceProcessorSource)) {
+        throw new Error(`Unknown argument "--source ${args.values.source}"`)
+    }
+
+    const mappingSources = Object.values(ResourceTaxonIdSource)
+
+    let updateMappings = mappingSources
+    if (args.values['keep-mappings']) {
+        if (args.values['update-mappings']) {
+            throw new Error('Cannot provide both --keep-mappings (-k) and --update-mappings (-u)')
+        }
+
+        updateMappings = [] as ResourceTaxonIdSource[]
+    } else if (args.values['update-mappings']) {
+        for (const source of args.values['update-mappings']) {
+            if (!mappingSources.includes(source as ResourceTaxonIdSource)) {
+                throw new Error(`Unknown argument "--update-mappings ${args.values.source}"`)
+            }
+        }
+
+        updateMappings = args.values['update-mappings'] as ResourceTaxonIdSource[]
+    }
 
     const processor = new ResourceProcessor(args.positionals[0])
     process.on('exit', () => {
@@ -505,8 +597,8 @@ function main (): void {
 
     const source = args.values.source as ResourceProcessorSource
     const config: ResourceProcessorConfig = {
-        update: source !== 'unprocessed',
-        updateMappings: !args.values['keep-mappings']
+        update: source === ResourceProcessorSource.All || source === ResourceProcessorSource.Modified,
+        updateMappings
     }
 
     processor.run(source, config).catch(error => {

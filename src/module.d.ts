@@ -131,15 +131,21 @@ interface TaxonMatch {
 
 type GroupedNameMatches = Record<string, Record<string, Record<TaxonId, TaxonMatch>>>
 
+declare enum ResourceTaxonIdSource {
+    COL = 'col',
+    GBIF = 'gbif'
+}
+
 declare enum ResourceProcessorSource {
     All = 'all',
     Unprocessed = 'unprocessed',
-    Modified = 'modified'
+    Modified = 'modified',
+    Dwc = 'dwc'
 }
 
 interface ResourceProcessorConfig {
     update: boolean,
-    updateMappings: boolean
+    updateMappings: ResourceTaxonIdSource[]
 }
 
 declare module 'ietf-language-tag-regex' {
