@@ -275,7 +275,10 @@ class ResourceProcessor {
             const { resources } = await import('../index')
             return resources.parseTextFile(file, id, old)
         } catch (error) {
-            console.log(error.message)
+            if (error instanceof Error) {
+                console.log(error.message)
+            }
+
             await prompt(`${id}: generating Darwin Core failed, retry? `)
 
             // Clear cache to re-import

@@ -125,7 +125,7 @@ function parseResource (resource: FilePart): [ResourceMetadata, FilePart] {
     try {
         config = parseHeader(header)
     } catch (error) {
-        throw makeParseError(error.message, resource.offsetLine + 1)
+        throw makeParseError(error instanceof Error ? error.message : 'Error', resource.offsetLine + 1)
     }
 
     const content = rest.join('')
@@ -246,7 +246,7 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
                 itemErrors.push(makeParseError(error.message, lineNumber))
                 item = error.result
             } else {
-                errors.push(makeParseError(error.message, lineNumber))
+                errors.push(makeParseError(error instanceof Error ? error.message : 'Error', lineNumber))
                 continue
             }
         }
@@ -361,7 +361,7 @@ export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Res
     const oldResources = old ? splitResources(old.txt) : []
     const newResources = splitResources(file)
     const resources: Resource[] = []
-    const errors = []
+    const errors: SyntaxError[] = []
 
     for (let index = 0; index < newResources.length; index++) {
         const [config, content] = parseResource(newResources[index])
@@ -392,7 +392,11 @@ export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Res
         try {
             resources.push(parseResourceContent(diff, template, oldIds, content.offsetLine))
         } catch (error) {
-            errors.push(error)
+            if (error instanceof SyntaxError) {
+                errors.push(error)
+            }
+
+            throw error
         }
     }
 
