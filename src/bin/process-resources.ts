@@ -220,15 +220,10 @@ class ResourceProcessor {
 
             let old = undefined
             if (config.update) {
-                const dwc = []
-                for (const file of await fs.readdir(this.DIR_DWC)) {
-                    if (file.startsWith(id + '-')) {
-                        const filePath = path.join(this.DIR_DWC, file)
-                        dwc.push(csv.parseCsv(await getOldFile(filePath)))
-                    }
+                old = {
+                    txt: await getOldFile(filePath),
+                    dwc: await this.readResourceDwc(id)
                 }
-
-                old = { txt: await getOldFile(filePath), dwc }
             }
 
             const { resources } = await import('../index')
@@ -247,6 +242,19 @@ class ResourceProcessor {
 
             return this.processResourceText(id, config)
         }
+    }
+
+    async readResourceDwc (id: WorkId): Promise<Array<string[][]>> {
+        const dwc = []
+
+        for (const file of await fs.readdir(this.DIR_DWC)) {
+            if (file.startsWith(id + '-')) {
+                const filePath = path.join(this.DIR_DWC, file)
+                dwc.push(csv.parseCsv(await getOldFile(filePath)))
+            }
+        }
+
+        return dwc
     }
 
     async processResourceDwc (resource: Resource, config: ResourceProcessorConfig): Promise<AmendedResource> {
