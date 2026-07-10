@@ -4,6 +4,9 @@
   "description": "SDK and tools for data from the Library of Identification Resources",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
   "bin": {
     "loir-validate-catalog": "./lib/bin/validate-catalog.js",
     "loir-validate-resources": "./lib/bin/validate-resources-text.js",
@@ -33,22 +36,22 @@
   "homepage": "https://github.com/identification-resources/formica#readme",
   "dependencies": {
     "ietf-language-tag-regex": "^0.0.5",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^5.2.1",
     "jsonld": "^9.0.0",
-    "n3": "^1.25.2",
+    "n3": "^2.1.1",
     "spdx-license-list": "^6.6.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.26.0",
+    "@eslint/js": "^10.0.1",
     "@types/js-yaml": "^4.0.5",
     "@types/jsonld": "^1.5.15",
     "@types/n3": "^1.24.2",
-    "@types/node": "^22.15.14",
+    "@types/node": "^26.1.1",
     "@typescript-eslint/eslint-plugin": "^8.32.0",
     "@typescript-eslint/parser": "^8.32.0",
     "conventional-changelog-cli": "^5.0.0",
-    "eslint": "^9.26.0",
+    "eslint": "^10.6.0",
     "typescript": "^5.8.3"
   }
 }
