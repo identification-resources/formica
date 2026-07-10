@@ -64,7 +64,7 @@ export function amendResource (resource: AmendedResource, source: string, matche
     for (const id in matches) {
         const match = matches[id]
 
-        if (source === '1') {
+        if (source === '1' || source === '13') {
             resource.taxa[id].colTaxonID = match.id
             if (match.currentId) {
                 resource.taxa[id].colAcceptedTaxonID = match.currentId

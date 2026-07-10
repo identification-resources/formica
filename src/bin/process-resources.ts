@@ -76,7 +76,7 @@ const GBIF_RANKS: Rank[] = [
 
 function runGnverifier (names: string): Promise<string> {
     return new Promise((resolve, reject) => {
-        const proc = spawn('gnverifier', ['-s', '1,11', '-f', 'compact', '-M'])
+        const proc = spawn('gnverifier', ['-s', '13,11', '-f', 'compact', '-M'])
         let stdout = ''
         proc.stdout.on('data', data => { stdout += data })
         proc.stderr.pipe(process.stdout)
