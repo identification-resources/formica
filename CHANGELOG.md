@@ -1,3 +1,11 @@
+# [0.10.0](https://github.com/identification-resources/formica/compare/v0.9.2...v0.10.0) (2026-07-10)
+
+
+### Features
+
+* **resources:** add options to update mappings of existing DwC files ([0dc4c74](https://github.com/identification-resources/formica/commit/0dc4c744594cc89fc2fa644418d77d1f7be498b9))
+* **resrouces:** switch COL for COL XR ([74e1c78](https://github.com/identification-resources/formica/commit/74e1c788e4226231029f9789d1e18d9519ceeb8f))
+
 ## [0.9.2](https://github.com/identification-resources/formica/compare/v0.9.1...v0.9.2) (2026-06-05)
 
 
