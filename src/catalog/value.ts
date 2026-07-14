@@ -20,6 +20,7 @@ export const FORMATS = {
     QID: /^Q[1-9][0-9]*$/,
     URL: /^(ftp|http|https):\/\/((?:[a-z0-9][a-z0-9-_]*?[a-z0-9]?\.)+(?:xn--)?[a-z0-9]+)(:\d*)?((?:\/(?:%\d\d|[!$&'()*+,\-.0-9";=@A-Z_a-z~])*)*)(\?(?:%\d\d|[!$&'()*+,\-./0-9:;=?@A-Z_a-z~])*)?(#(?:%\d\d|[!$&'()*+,\-./0-9:;=?@A-Z_a-z~])*)?/i,
     INTEGER: /^(0|[1-9]\d*)$/,
+    COL_ID: /^(0|[1-9A-Z][0-9A-Z]*)$/,
 
     LICENSE (value: SingleValue) { return /^<(public domain|.+\?)>$/.test(value) || !!spdxLicenseList[value] },
     LANGUAGE (value: SingleValue) { return ietfTagList.test(value) }
