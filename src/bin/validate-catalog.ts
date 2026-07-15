@@ -4,49 +4,57 @@ import { promises as fs } from 'fs'
 import * as path from 'path'
 import { catalog } from '../index'
 
+interface TaxaValidatorFields {
+    id: string,
+    children: string,
+    ancestors: string
+}
+
 class TaxaValidator {
     taxa: catalog.Entity[];
+    fields: TaxaValidatorFields;
     errors: WorkError[];
     parentIndex: Record<string, string>;
 
-    constructor (taxa: catalog.Entities) {
-        this.taxa = Array.from(taxa).filter(taxon => taxon.has('ancestors_gbif'))
+    constructor (taxa: catalog.Entities, fields: TaxaValidatorFields) {
+        this.taxa = Array.from(taxa).filter(taxon => taxon.has(fields.ancestors))
+        this.fields = fields
         this.errors = []
         this.parentIndex = {}
     }
 
     validate (): WorkError[] {
         for (const taxon of this.taxa) {
-            const parents = taxon.get('ancestors_gbif') as string[]
+            const parents = taxon.get(this.fields.ancestors) as string[]
 
             if (parents.length > 1) {
                 const id = taxon.get('id') as string
 
                 for (let i = 1; i < parents.length; i++) {
-                    this.addToIndex(id, 'ancestors_gbif', parents[i], parents[i - 1])
+                    this.addToIndex(id, this.fields.ancestors, parents[i], parents[i - 1])
                 }
             }
         }
 
         for (const taxon of this.taxa) {
-            if (taxon.has('gbif')) {
+            if (taxon.has(this.fields.id)) {
                 const id = taxon.get('id') as string
-                const parents = taxon.get('ancestors_gbif') as string[]
+                const parents = taxon.get(this.fields.ancestors) as string[]
                 const parent = parents[parents.length - 1] as string
 
-                this.addToIndex(id, 'gbif', taxon.get('gbif') as string, parent)
+                this.addToIndex(id, this.fields.id, taxon.get(this.fields.id) as string, parent)
             }
         }
 
         for (const taxon of this.taxa) {
-            if (taxon.has('children_gbif')) {
+            if (taxon.has(this.fields.children)) {
                 const id = taxon.get('id') as string
-                const parents = taxon.get('ancestors_gbif') as string[]
+                const parents = taxon.get(this.fields.ancestors) as string[]
                 const parent = parents[parents.length - 1] as string
 
-                const childIds = taxon.get('children_gbif') as string[]
+                const childIds = taxon.get(this.fields.children) as string[]
                 for (const childId of childIds) {
-                    this.addToIndex(id, 'gbif', childId, parent)
+                    this.addToIndex(id, this.fields.id, childId, parent)
                 }
             }
         }
@@ -63,6 +71,26 @@ class TaxaValidator {
             const error = `Inconsistent ancestor of ${childId}, expected ${actualParentId} but got ${parentId}`
             this.errors.push({ entity, field, error })
         }
+    }
+}
+
+class GbifTaxaValidator extends TaxaValidator {
+    constructor (taxa: catalog.Entities) {
+        super(taxa, {
+            id: 'gbif',
+            children: 'children_gbif',
+            ancestors: 'ancestors_gbif'
+        })
+    }
+}
+
+class ColTaxaValidator extends TaxaValidator {
+    constructor (taxa: catalog.Entities) {
+        super(taxa, {
+            id: 'col',
+            children: 'children_col',
+            ancestors: 'ancestors_col'
+        })
     }
 }
 
@@ -89,8 +117,11 @@ async function validateFile (arg: string): Promise<WorkError[]> {
     }
 
     if (sheet === 'taxa') {
-        const validator = new TaxaValidator(entities)
-        errors.push(...validator.validate())
+        // const colValidator = new ColTaxaValidator(entities)
+        // errors.push(...colValidator.validate())
+
+        const gbifValidator = new GbifTaxaValidator(entities)
+        errors.push(...gbifValidator.validate())
     }
 
     return errors
