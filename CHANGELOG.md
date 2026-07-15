@@ -1,3 +1,10 @@
+## [0.10.1](https://github.com/identification-resources/formica/compare/v0.10.0...v0.10.1) (2026-07-15)
+
+
+### Features
+
+* **catalog:** add CoL columns to taxon schema ([630cbe4](https://github.com/identification-resources/formica/commit/630cbe424521c61664f9e209a31befc1f3925aa1))
+
 # [0.10.0](https://github.com/identification-resources/formica/compare/v0.9.2...v0.10.0) (2026-07-10)
 
 
