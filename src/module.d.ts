@@ -122,18 +122,28 @@ interface AmendedResource extends Resource {
     taxa: Record<TaxonId, AmendedTaxon>
 }
 
+type TaxonMatchClassificationPath = Array<{
+    name: string;
+    rank: string;
+}>
+
 interface TaxonMatch {
-    source: number,
+    source: ResourceTaxonIdSource,
     id: string,
     currentId?: string,
-    classificationPath: string[]
+    classificationPath: TaxonMatchClassificationPath
 }
 
-type GroupedNameMatches = Record<string, Record<string, Record<TaxonId, TaxonMatch>>>
+type GroupedNameMatches = Partial<Record<ResourceTaxonIdSource, Record<string, Record<TaxonId, TaxonMatch>>>>
 
 declare enum ResourceTaxonIdSource {
     COL = 'col',
     GBIF = 'gbif'
+}
+
+declare enum ResourceTaxonIdApi {
+    GNVerifier = 'gnverifier',
+    ChecklistBank = 'clb'
 }
 
 declare enum ResourceProcessorSource {
@@ -145,7 +155,8 @@ declare enum ResourceProcessorSource {
 
 interface ResourceProcessorConfig {
     update: boolean,
-    updateMappings: ResourceTaxonIdSource[]
+    updateMappings: ResourceTaxonIdSource[],
+    mappingsApi: ResourceTaxonIdApi
 }
 
 declare module 'ietf-language-tag-regex' {

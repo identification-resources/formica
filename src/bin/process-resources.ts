@@ -5,12 +5,14 @@ import * as path from 'path'
 import { spawn } from 'child_process'
 import * as util from 'util'
 
-import { csv } from '../index'
+import { csv, taxonNames } from '../index'
 import { prompt, promptForAnswers, numericSort, runCommand } from './util'
 
-export enum ResourceTaxonIdSource {
-    COL = 'col',
-    GBIF = 'gbif'
+const { ResourceTaxonIdSource, formatClassificationPath } = taxonNames
+
+enum ResourceTaxonIdApi {
+    GNVerifier = 'gnverifier',
+    ChecklistBank = 'clb'
 }
 
 export enum ResourceProcessorSource {
@@ -103,6 +105,62 @@ function runGnverifier (names: string, sources: ResourceTaxonIdSource[]): Promis
         proc.stdin.write(names)
         proc.stdin.end()
     })
+}
+
+const CLB_SOURCES: Record<ResourceTaxonIdSource, string> = {
+    gbif: '53147',
+    col: '3LXR'
+}
+
+function getBatchedFetch (limit = 20) {
+    let count = 0
+    let queue: Array<(result?: unknown) => void> = []
+
+    return async function (...args: Parameters<typeof fetch>) {
+        if (count >= limit) {
+            await new Promise(resolve => { queue.push(resolve) })
+        }
+
+        count++
+        try {
+            return await fetch(...args)
+        } finally {
+            count--
+
+            if (count < limit) {
+                const resolver = queue.shift()
+                if (resolver) {
+                    resolver()
+                }
+            }
+        }
+    }
+}
+
+function runClbNameParser (taxa: Record<TaxonId, Taxon>, sources: ResourceTaxonIdSource[]): Promise<Array<[TaxonId, ResourceTaxonIdSource, string]>> {
+    const fetchBatched = getBatchedFetch(50)
+    const promises: Array<Promise<[TaxonId, ResourceTaxonIdSource, string]>> = []
+
+    for (const id in taxa) {
+        const { scientificName, scientificNameAuthorship: authorship, taxonRank: rank } = taxa[id]
+        const params = new URLSearchParams({
+            scientificName: authorship ? scientificName.slice(0, -1 - authorship.length) : scientificName,
+            authorship: authorship ?? '',
+            rank: rank ?? ''
+        })
+        const queryString = params.toString()
+
+        for (const source of sources) {
+            const url = `https://api.checklistbank.org/dataset/${CLB_SOURCES[source]}/match/nameusage?verbose=true&${queryString}`
+            const promise: Promise<[TaxonId, ResourceTaxonIdSource, string]> = fetchBatched(url)
+                .then(response => response.text())
+                .then(response => [taxa[id].scientificNameID, source, response])
+
+            promises.push(promise)
+        }
+    }
+
+    return Promise.all(promises)
 }
 
 async function listFiles (directory: string): Promise<string[]> {
@@ -336,6 +394,25 @@ class ResourceProcessor {
             return resource as AmendedResource
         }
 
+        const filteredResults = config.mappingsApi === ResourceTaxonIdApi.ChecklistBank
+            ? await this.getClbNameParserResults(resource, config)
+            : await this.getGnverifierResults(resource, config)
+
+        const { taxonNames: { amendResource, groupNameMatches } } = await import('../index')
+        const groupedNameMatches = groupNameMatches(filteredResults)
+
+        const amendedResource: AmendedResource = { ...resource, taxa: { ...resource.taxa } }
+        for (const key in groupedNameMatches) {
+            const source = key as ResourceTaxonIdSource
+
+            const matches = await this.selectPrefixes(resource, groupedNameMatches[source] as Record<string, Record<TaxonId, TaxonMatch>>, source)
+            amendResource(amendedResource, source, matches)
+        }
+
+        return amendedResource
+    }
+
+    async getGnverifierResults (resource: Resource|AmendedResource, config: ResourceProcessorConfig): Promise<Record<TaxonId, TaxonMatch[]>> {
         const filteredResults: Record<TaxonId, TaxonMatch[]> = {}
         const taxonNames: Record<string, TaxonId[]> = {}
         const names = new Set()
@@ -394,6 +471,9 @@ class ResourceProcessor {
                     continue
                 }
 
+                const classificationRanks = match.classificationRanks.split('|')
+                const classificationPath = match.classificationPath.split('|').map((name, i) => ({ name, rank: classificationRanks[i] }))
+
                 for (const loirId of taxonNames[name]) {
                     const taxon = resource.taxa[loirId]
 
@@ -423,47 +503,99 @@ class ResourceProcessor {
                     }
 
                     filteredResults[loirId].push({
-                        source,
+                        source: source === 11 ? ResourceTaxonIdSource.GBIF : ResourceTaxonIdSource.COL,
                         id: match.recordId,
                         currentId: match.currentRecordId,
-                        classificationPath: match.classificationPath.split('|')
+                        classificationPath
                     })
                 }
             }
         }
 
-        const { taxonNames: { amendResource, groupNameMatches } } = await import('../index')
-        const groupedNameMatches = groupNameMatches(filteredResults)
-
-        const amendedResource: AmendedResource = { ...resource, taxa: { ...resource.taxa } }
-        for (const source in groupedNameMatches) {
-            const matches = await this.selectPrefixes(resource, groupedNameMatches, source)
-            amendResource(amendedResource, source, matches)
-        }
-
-        return amendedResource
+        return filteredResults
     }
 
-    async selectPrefixes (resource: Resource, groupedNameMatches: GroupedNameMatches, source: string): Promise<Record<TaxonId, TaxonMatch>> {
-        const prefixes = Object.keys(groupedNameMatches[source])
+    async getClbNameParserResults (resource: Resource|AmendedResource, config: ResourceProcessorConfig): Promise<Record<TaxonId, TaxonMatch[]>> {
+        const filteredResults: Record<TaxonId, TaxonMatch[]> = {}
+
+        const result = await runClbNameParser(resource.taxa, config.updateMappings)
+        for (const [loirId, source, results] of result) {
+            interface MatchTaxon {
+                id: string;
+                name: string;
+                rank: string;
+                status: string;
+            }
+
+            interface MatchUsage extends MatchTaxon {
+                classification: MatchTaxon[];
+            }
+
+            const { match, type: matchType, usage, alternatives = [] } = JSON.parse(results)
+
+            if (!match) {
+                continue
+            }
+
+            filteredResults[loirId] = []
+
+            const matches = [usage, ...alternatives]
+            for (const match of matches as MatchUsage[]) {
+                const isSynonym = match.status !== 'accepted' && match.status !== 'provisionally accepted'
+                const currentRank = isSynonym ? match.classification[0].rank : match.rank
+                const currentName = isSynonym ? match.classification[0].name : match.name
+                const currentId = isSynonym ? match.classification[0].id : match.id
+
+                if (matchType === 'higherrank') {
+                    // Rank mismatch
+                    continue
+                } if (source === ResourceTaxonIdSource.GBIF && currentRank === 'species' && currentName.endsWith(' spec')) {
+                    // GBIF species like "Nomada spec"
+                    continue
+                }
+
+                const taxon = resource.taxa[loirId]
+                if (source === ResourceTaxonIdSource.GBIF && !GBIF_RANKS.includes(taxon.taxonRank)) {
+                    // Exclude GBIF matches for ranks that are not in GBIF
+                    continue
+                } else if (source === ResourceTaxonIdSource.GBIF && !isSynonym && currentRank !== taxon.taxonRank) {
+                    // Exclude matches with rank mismatches (only possible
+                    // for non-synonyms).
+                    continue
+                }
+
+                filteredResults[loirId].push({
+                    source,
+                    id: match.id,
+                    currentId: currentId,
+                    classificationPath: match.classification.map(({ name, rank }) => ({ name, rank })).reverse()
+                })
+            }
+        }
+
+        return filteredResults
+    }
+
+    async selectPrefixes (resource: Resource, groupedNameMatches: Record<string, Record<TaxonId, TaxonMatch>>, source: ResourceTaxonIdSource): Promise<Record<TaxonId, TaxonMatch>> {
+        const prefixes = Object.keys(groupedNameMatches)
         if (prefixes.length === 0) {
             return {}
         } else if (prefixes.length === 1) {
-            return groupedNameMatches[source][prefixes[0]]
+            return groupedNameMatches[prefixes[0]]
         }
 
         // Count total mapped taxa
         const mappedTaxa: Record<TaxonId, boolean> = {}
         for (const prefix of prefixes) {
-            for (const taxon in groupedNameMatches[source][prefix]) {
+            for (const taxon in groupedNameMatches[prefix]) {
                 mappedTaxa[taxon] = true
             }
         }
-        const missedTaxonCount = Object.keys(mappedTaxa).length - Object.keys(groupedNameMatches[source][prefixes[0]]).length
+        const missedTaxonCount = Object.keys(mappedTaxa).length - Object.keys(groupedNameMatches[prefixes[0]]).length
 
         if (missedTaxonCount === 0) {
             // Multiple prefixes but the first one maps all taxa (not counting that are unmapped in all prefixes)
-            return groupedNameMatches[source][prefixes[0]]
+            return groupedNameMatches[prefixes[0]]
         }
 
         console.error(`${resource.workId}: source ${source} results in multiple prefixes`)
@@ -472,13 +604,10 @@ class ResourceProcessor {
         if (missedTaxonCount <= 5) {
             console.error(`  Most common prefix misses ${missedTaxonCount} taxa: automatically selecting most common prefix...`)
             choice = '1'
-        } else if (source === '1') {
-            console.error(`  Catalogue of Life: automatically selecting most common prefix...`)
-            choice = '1'
         } else {
             for (let i = 0; i < prefixes.length; i++) {
                 const prefix = prefixes[i]
-                const taxa = groupedNameMatches[source][prefix]
+                const taxa = groupedNameMatches[prefix]
                 const taxonIds = Object.keys(taxa)
 
                 console.error(`  [${i + 1}] ${prefix} (${taxonIds.length} taxa)`)
@@ -486,7 +615,7 @@ class ResourceProcessor {
                     const taxonId = taxonIds[j]
                     const taxon = resource.taxa[taxonId]
                     const match = taxa[taxonId]
-                    console.error(`      taxon: ${taxonId} "${taxon.scientificName}" - ${match.classificationPath.join('|')}`)
+                    console.error(`      taxon: ${taxonId} "${taxon.scientificName}" - ${formatClassificationPath(match.classificationPath)}`)
                 }
                 if (taxonIds.length > 9) {
                     console.error(`      ...`)
@@ -507,7 +636,7 @@ class ResourceProcessor {
         const matches: Record<TaxonId, TaxonMatch> = {}
         for (const i of choice.split(',')) {
             const prefix = prefixes[parseInt(i) - 1]
-            const taxa = groupedNameMatches[source][prefix]
+            const taxa = groupedNameMatches[prefix]
             for (const id in taxa) {
                 if (id in matches) {
                     continue
@@ -565,6 +694,10 @@ function main (): void {
                 type: 'string',
                 short: 'u',
                 multiple: true
+            },
+            'mapping-api': {
+                type: 'string',
+                default: 'gnverifier'
             }
         },
         allowPositionals: true
@@ -593,6 +726,10 @@ function main (): void {
         updateMappings = args.values['update-mappings'] as ResourceTaxonIdSource[]
     }
 
+    if (!Object.values(ResourceTaxonIdApi).includes(args.values['mapping-api'] as ResourceTaxonIdApi)) {
+        throw new Error(`Unknown argument "--mapping-api ${args.values['mapping-api']}"`)
+    }
+
     const processor = new ResourceProcessor(args.positionals[0])
     process.on('exit', () => {
         process.stdout.write('\n')
@@ -601,7 +738,8 @@ function main (): void {
     const source = args.values.source as ResourceProcessorSource
     const config: ResourceProcessorConfig = {
         update: source === ResourceProcessorSource.All || source === ResourceProcessorSource.Modified,
-        updateMappings
+        updateMappings,
+        mappingsApi: args.values['mapping-api'] as ResourceTaxonIdApi
     }
 
     processor.run(source, config).catch(error => {
