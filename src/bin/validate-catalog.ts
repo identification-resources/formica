@@ -84,15 +84,15 @@ class GbifTaxaValidator extends TaxaValidator {
     }
 }
 
-class ColTaxaValidator extends TaxaValidator {
-    constructor (taxa: catalog.Entities) {
-        super(taxa, {
-            id: 'col',
-            children: 'children_col',
-            ancestors: 'ancestors_col'
-        })
-    }
-}
+// class ColTaxaValidator extends TaxaValidator {
+//     constructor (taxa: catalog.Entities) {
+//         super(taxa, {
+//             id: 'col',
+//             children: 'children_col',
+//             ancestors: 'ancestors_col'
+//         })
+//     }
+// }
 
 async function validateFile (arg: string): Promise<WorkError[]> {
     const filePath = path.resolve(arg)

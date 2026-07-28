@@ -113,8 +113,8 @@ const CLB_SOURCES: Record<ResourceTaxonIdSource, string> = {
 }
 
 function getBatchedFetch (limit = 20) {
+    const queue: Array<(result?: unknown) => void> = []
     let count = 0
-    let queue: Array<(result?: unknown) => void> = []
 
     return async function (...args: Parameters<typeof fetch>) {
         if (count >= limit) {
