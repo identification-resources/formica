@@ -36,6 +36,7 @@ Run locally:
       - Use `--mapping-api` to use either `gnverifier` (default) or `clb`, the ChecklistBank
         API, to update the mappings.
   - `loir-resources-index [./resources]`: Create indices of the Darwin Core archives.
+  - `loir-resources-check-diff [./resources/dwc]`: Determine which columns changed.
 
 ## API
 

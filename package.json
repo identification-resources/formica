@@ -12,6 +12,7 @@
     "loir-validate-resources": "lib/bin/validate-resources-text.js",
     "loir-resources-process": "lib/bin/process-resources.js",
     "loir-resources-index": "lib/bin/process-resources-index.js",
+    "loir-resources-check-diff": "lib/bin/check-resources-diff.js",
     "loir-generate-linked-data": "lib/bin/generate-linked-data.js"
   },
   "scripts": {
