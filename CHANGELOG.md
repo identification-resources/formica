@@ -1,3 +1,11 @@
+## [0.10.2](https://github.com/identification-resources/formica/compare/v0.10.1...v0.10.2) (2026-07-28)
+
+
+### Features
+
+* **resources:** add command to summarize DwC diffs ([f32d4a3](https://github.com/identification-resources/formica/commit/f32d4a35d00f2f622b5372949b00ba55054e2f33))
+* **resources:** implement ChecklistBank API ([f92256b](https://github.com/identification-resources/formica/commit/f92256b139e3ca6f4d9b526eb9c9828afc29025c)), closes [#17](https://github.com/identification-resources/formica/issues/17)
+
 ## [0.10.1](https://github.com/identification-resources/formica/compare/v0.10.0...v0.10.1) (2026-07-15)
 
 
