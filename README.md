@@ -20,6 +20,8 @@ Run locally:
   - `loir-validate-resources [./B1234.txt]`:
     Validate the `.txt` files containing information on the taxonomic scope of keys
     ([documentation](https://github.com/identification-resources/catalog/blob/main/docs/resources-txt.md)).
+  - `loir-validate-integrity .`:
+    Check if all values are mapped as expected.
   - `loir-resources-process [./resources]`:
     Interactive tool to convert the aforementioned `.txt` files to Darwin Core archives
     ([documentation](https://github.com/identification-resources/catalog/blob/main/docs/resources-dwc.md)),
