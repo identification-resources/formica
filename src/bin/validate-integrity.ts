@@ -48,7 +48,7 @@ function checkIntegrity (catalog: catalog.Entities, resources: ResourcesIndex, f
                 errors.push({
                     entity: id,
                     field: field,
-                    error: `Value "${value}" not mapped`
+                    error: `Value "${value}" is not mapped`
                 })
             }
         }
@@ -97,9 +97,11 @@ async function main (args: string[]): Promise<void> {
         ...checkIntegrity(catalog, resources, 'region', places)
     ]
 
-    console.table(errors)
+    if (errors.length) {
+        console.table(errors)
 
-    process.exit(errors.length ? 1 : 0)
+        process.exit(1)
+    }
 }
 
 main(process.argv.slice(2))
