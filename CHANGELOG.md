@@ -1,3 +1,10 @@
+## [0.10.3](https://github.com/identification-resources/formica/compare/v0.10.2...v0.10.3) (2026-08-08)
+
+
+### Features
+
+* **catalog:** add validator script for mapping integrity ([75c452c](https://github.com/identification-resources/formica/commit/75c452ced979b364e58ef0962bb4e7722ecc6b71))
+
 ## [0.10.2](https://github.com/identification-resources/formica/compare/v0.10.1...v0.10.2) (2026-07-28)
 
 
