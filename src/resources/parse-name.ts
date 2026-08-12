@@ -255,7 +255,18 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
             }
 
             // Remove rank abbreviations
-            name = name.replace(/^(st|r|ab|f|var|ssp|subsp)\. /, '')
+            for (const abbreviation in RANK_LABELS_REVERSE) {
+                const prefix = abbreviation + '. '
+                if (name.startsWith(prefix)) {
+                    const abbreviationRank = RANK_LABELS_REVERSE[abbreviation]
+                    if (rank !== abbreviationRank) {
+                        throw new RecoverableSyntaxError(`Infraspecific rank label has an unexpected rank: "${abbreviation}." meaning ${abbreviationRank}, expected ${rank}`, item)
+                    }
+
+                    name = name.slice(prefix.length)
+                    break
+                }
+            }
         }
     } else if (compareRanks('genus', rank) <= 0) {
         // Remove genus
