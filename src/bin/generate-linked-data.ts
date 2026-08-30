@@ -182,7 +182,7 @@ function makeWikidataUri (qid: string): NodeObject {
 }
 
 function makeGbifUri (id: string): NodeObject {
-    return { '@id': `https://gbif.org/species/${id}` }
+    return { '@id': `https://www.gbif.org/species/${id}` }
 }
 
 function makeColUri (id: string): NodeObject {
@@ -545,6 +545,7 @@ function makeLinkedDataForResource (work: catalog.Entity, files: Catalog, resour
 function makeLinkedDataForWork (work: catalog.Entity, files: Catalog): NodeObject {
     const id = work.get('id') as string
     const node: NodeObject = makeWorkUri(id)
+    node['@reverse'] = {}
 
     const languages = work.get('language') as string[]
     node['dcterms:language'] = languages.map(language => ({ '@id': `http://id.loc.gov/vocabulary/iso639-1/${language}` }))
@@ -689,54 +690,70 @@ function makeLinkedDataForWork (work: catalog.Entity, files: Catalog): NodeObjec
         })
     }
 
+    if (work.has('part_of')) {
+        const containers = work.get('part_of') as string[]
+
+        if ((work.get('key_type') as string[]).includes('supplement')) {
+            node['bibo:annotates'] = containers.map(makeWorkUri)
+        } else {
+            node['dcterms:isPartOf'] = containers.map(makeWorkUri)
+
+            for (const container of containers) {
+                if (!Array.isArray(node['@reverse']['dcterms:hasPart'])) {
+                    node['@reverse']['dcterms:hasPart'] = []
+                }
+                node['@reverse']['dcterms:hasPart'].push(makeWorkUri(container))
+            }
+        }
+    }
+
+    if (work.has('listed_in')) {
+        const referers = work.get('listed_in') as string[]
+        node['bibo:citedBy'] = node['dcterms:isReferencedBy'] = referers.map(makeWorkUri)
+
+        for (const referer of referers) {
+            if (!Array.isArray(node['@reverse']['bibo:cites'])) {
+                node['@reverse']['bibo:cites'] = []
+            }
+            node['@reverse']['bibo:cites'].push(makeWorkUri(referer))
+
+            if (!Array.isArray(node['@reverse']['dcterms:references'])) {
+                node['@reverse']['dcterms:references'] = []
+            }
+            node['@reverse']['dcterms:references'].push(makeWorkUri(referer))
+        }
+    }
+
+    if (work.has('version_of')) {
+        const originals = work.get('version_of') as string[]
+        const originalLanguages = originals.map(id => {
+            const [workId, resourceId] = id.split(':')
+            const original = files.catalog.get(workId) as catalog.Entity
+            const language = (original.get('language') as string[]).join()
+
+            if (resourceId) {
+                const resourceLanguage = files.resources[id].metadata.catalog?.language
+                if (resourceLanguage) {
+                    return (resourceLanguage as string[]).join(',')
+                }
+            }
+
+            return language
+        })
+
+        node['bibo:translationOf'] = originals.filter((_, i) => originalLanguages[i] !== languages.join()).map(makeWorkUri)
+        node['dcterms:isVersionOf'] = originals.filter(id => work.get('id') !== id).map(makeWorkUri)
+    }
+
     return node
 }
 
-function makeLinkedDataForWorks (files: Catalog): NodeObject[] {
-    const nodes: Record<string, NodeObject> = {}
+function* makeLinkedDataForWorks (files: Catalog): Generator<NodeObject> {
     const works = files.catalog
 
     for (const work of works.entities) {
-        nodes[work.get('id') as string] = makeLinkedDataForWork(work, files)
-    }
-
-    for (const work of works.entities) {
         const id = work.get('id') as string
-        const node = nodes[id]
-        const language = work.get('language') as string[]
-
-        if (work.has('part_of')) {
-            const containers = work.get('part_of') as string[]
-
-            if ((work.get('key_type') as string[]).includes('supplement')) {
-                node['bibo:annotates'] = containers.map(makeWorkUri)
-            } else {
-                node['dcterms:isPartOf'] = containers.map(makeWorkUri)
-
-                for (const container of containers) {
-                    if (!Array.isArray(nodes[container]['dcterms:hasPart'])) {
-                        nodes[container]['dcterms:hasPart'] = []
-                    }
-                    (nodes[container]['dcterms:hasPart'] as NodeObject[]).push(makeWorkUri(id))
-                }
-            }
-        }
-
-        if (work.has('listed_in')) {
-            const referers = work.get('listed_in') as string[]
-            node['bibo:citedBy'] = node['dcterms:isReferencedBy'] = referers.map(makeWorkUri)
-
-            for (const referer of referers) {
-                nodes[referer]['bibo:cites'] = nodes[referer]['dcterms:references'] = makeWorkUri(id)
-            }
-        }
-
-        if (work.has('version_of')) {
-            const originals = work.get('version_of') as string[]
-            const originalLanguages = originals.map(id => ((works.get(id) as catalog.Entity).get('language') as string[]).join())
-            node['bibo:translationOf'] = originals.filter((_, i) => originalLanguages[i] !== language.join()).map(makeWorkUri)
-            node['dcterms:isVersionOf'] = originals.filter(id => work.get('id') !== id).map(makeWorkUri)
-        }
+        const node = makeLinkedDataForWork(work, files)
 
         let resourceIndex = 1
         let resourceId
@@ -753,28 +770,62 @@ function makeLinkedDataForWorks (files: Catalog): NodeObject[] {
             }
             (resource['dcterms:isPartOf'] as NodeObject[]).push({ '@id': node['@id'] })
         }
-    }
 
-    return Object.values(nodes)
+        yield node
+    }
 }
 
-async function writeOutput (document: JsonLdDocument, format = 'jsonld'): Promise<void> {
-    if (format === 'jsonld') {
-        process.stdout.write(JSON.stringify(document, null, 2))
-        return
+class Writer {
+    format: string
+    issuer: jsonld.util.IdentifierIssuer
+    n3parser: N3.StreamParser
+    n3writer: N3.StreamWriter
+
+    constructor (format: string) {
+        this.format = format
+
+        this.issuer = new jsonld.util.IdentifierIssuer('_:b')
+        this.n3parser = new N3.StreamParser()
+        this.n3writer = new N3.StreamWriter({ prefixes: PREFIXES })
+
+        if (this.format === 'jsonld') {
+            const [start] = JSON.stringify({ '@context': PREFIXES, '@graph': [] }, null, 2).split(/(?<="@graph": \[)/)
+            process.stdout.write(start + '\n')
+        } else if (this.format === 'nquads') {
+            // no preparation required
+        } else {
+            this.n3parser.pipe(this.n3writer)
+            this.n3writer.pipe(process.stdout)
+        }
     }
 
-    const nquads = await jsonld.toRDF(document, { format: 'application/n-quads' }) as string
-    if (format === 'nquads') {
-        process.stdout.write(nquads)
-        return
+    async write (graph: NodeObject[]) {
+        if (this.format === 'jsonld') {
+            for (const entity of graph) {
+                process.stdout.write(JSON.stringify(entity, null, 2).replace(/^/gm, '    ') + ',\n')
+            }
+            return
+        }
+
+        const document = {
+            '@context': PREFIXES,
+            '@graph': graph
+        }
+
+        const nquads = (await jsonld.toRDF(document, { format: 'application/n-quads', issuer: this.issuer })) as string
+        if (this.format === 'nquads') {
+            process.stdout.write(nquads)
+            return
+        }
+
+        this.n3parser.write(nquads)
     }
 
-    const parser = new N3.StreamParser()
-    const writer = new N3.StreamWriter({ prefixes: PREFIXES })
-    parser.write(nquads)
-    parser.pipe(writer)
-    writer.pipe(process.stdout)
+    end () {
+        if (this.format === 'jsonld') {
+            process.stdout.write('    null\n  ]\n}\n')
+        }
+    }
 }
 
 async function main (): Promise<void> {
@@ -815,8 +866,13 @@ async function main (): Promise<void> {
         files.resources[id] = { metadata: resources[id], taxa }
     }
 
+    const writer = new Writer(args.values.format)
+
+    for (const entity of makeLinkedDataForWorks(files)) {
+        await writer.write([entity])
+    }
+
     const graph: NodeObject[] = [
-        ...makeLinkedDataForWorks(files),
         ...makeLinkedDataForTaxa(files),
     ]
 
@@ -830,12 +886,8 @@ async function main (): Promise<void> {
         graph.push(makeLinkedDataForPublisher(entity))
     }
 
-    const document: JsonLdDocument = {
-        '@context': PREFIXES,
-        '@graph': graph
-    }
-
-    writeOutput(document, args.values.format)
+    await writer.write(graph)
+    writer.end()
 }
 
 main().catch((error: Error) => {

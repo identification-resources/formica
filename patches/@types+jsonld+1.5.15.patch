@@ -1,3 +1,28 @@
+diff --git a/node_modules/@types/jsonld/index.d.ts b/node_modules/@types/jsonld/index.d.ts
+index a880301..3ac9321 100644
+--- a/node_modules/@types/jsonld/index.d.ts
++++ b/node_modules/@types/jsonld/index.d.ts
+@@ -83,6 +83,7 @@ export namespace Options {
+         skipExpansion?: boolean | undefined;
+         format?: MimeNQuad | undefined;
+         produceGeneralizedRdf?: boolean | undefined;
++        issuer?: util.IdentifierIssuer;
+     }
+ 
+     // TODO Complete and uncomment if needed (see comments at the end of the file)
+@@ -154,6 +155,12 @@ export function toRDF(input: JsonLdDocument, options?: Options.ToRdf): Promise<R
+ 
+ export let JsonLdProcessor: JsonLdProcessorInterface;
+ 
++export namespace util {
++    export class IdentifierIssuer {
++        constructor (prefix: string);
++    }
++}
++
+ // disable autoexport
+ export {};
+ 
 diff --git a/node_modules/@types/jsonld/jsonld.d.ts b/node_modules/@types/jsonld/jsonld.d.ts
 index 5c7cef9..3d39633 100644
 --- a/node_modules/@types/jsonld/jsonld.d.ts

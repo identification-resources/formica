@@ -1,0 +1,25 @@
+diff --git a/node_modules/jsonld/lib/expand.js b/node_modules/jsonld/lib/expand.js
+index dc52fc6..beb6c21 100644
+--- a/node_modules/jsonld/lib/expand.js
++++ b/node_modules/jsonld/lib/expand.js
+@@ -528,6 +528,7 @@ async function _expandObject({
+     if(expandedProperty === '@id') {
+       if(!_isString(value)) {
+         if(!options.isFrame) {
++          console.error(element, activeProperty)
+           throw new JsonLdError(
+             'Invalid JSON-LD syntax; "@id" value must a string.',
+             'jsonld.SyntaxError', {code: 'invalid @id value', value});
+diff --git a/node_modules/jsonld/lib/toRdf.js b/node_modules/jsonld/lib/toRdf.js
+index e8a5484..87972fc 100644
+--- a/node_modules/jsonld/lib/toRdf.js
++++ b/node_modules/jsonld/lib/toRdf.js
+@@ -52,7 +52,7 @@ module.exports = api;
+  */
+ api.toRDF = (input, options) => {
+   // create node map for default graph (and any named graphs)
+-  const issuer = new util.IdentifierIssuer('_:b');
++  const issuer = options.issuer || new util.IdentifierIssuer('_:b');
+   const nodeMap = {'@default': {}};
+   createNodeMap(input, nodeMap, '@default', issuer);
+ 
