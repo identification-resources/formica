@@ -1,3 +1,18 @@
+## [0.10.4](https://github.com/identification-resources/formica/compare/v0.10.3...v0.10.4) (2026-08-30)
+
+
+### Bug Fixes
+
+* **catalog:** add RDF mappings for scopes ([5321683](https://github.com/identification-resources/formica/commit/532168333e753d8eb9f104cadcae25ad517b69ad))
+* **catalog:** add streaming output support for RDF ([cb2fad4](https://github.com/identification-resources/formica/commit/cb2fad4c7697ce6e84444d6969cb5764e4f6ed4a))
+* **catalog:** fix validation script output ([d687b28](https://github.com/identification-resources/formica/commit/d687b28db38e25ba9d647fee892ae47281fb1af4))
+
+
+### Features
+
+* **catalog:** update RDF to use COL identifiers ([6a09519](https://github.com/identification-resources/formica/commit/6a09519178dae1e6f633eb95329a98afd20b8227))
+* **resources:** validate correct infraspecific rank prefix ([be30aff](https://github.com/identification-resources/formica/commit/be30aff80cc0a988f41071a93411da6f8d144a11))
+
 ## [0.10.3](https://github.com/identification-resources/formica/compare/v0.10.2...v0.10.3) (2026-08-08)
 
 
