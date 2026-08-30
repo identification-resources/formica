@@ -111,15 +111,17 @@ const STATUSES: Record<string, string> = {
     'synonym': 'http://rs.gbif.org/vocabulary/gbif/taxonomicStatus/synonym',
 }
 
-function getCoveringTaxon (taxa: catalog.Entity[]): string|null {
-    if (taxa.length === 1 && !taxa[0].has('gbif')) {
+function getCoveringTaxon (taxa: catalog.Entity[], allTaxa: catalog.Entity[]): string|null {
+    if (taxa.length === 1 && !taxa[0].has('col')) {
         return `${PREFIX}taxon/${taxa[0].get('id')}`
     }
 
     function getAncestors (taxon: catalog.Entity): string[] {
-        const [...parents] = (taxon.get('parent_taxa') ?? []) as string[]
-        if (taxon.has('gbif')) {
-            parents.push(taxon.get('gbif') as string)
+        const [...parents] = (taxon.get('ancestors_col') ?? []) as string[]
+        if (taxon.has('accepted_col')) {
+            parents.push(taxon.get('accepted_col') as string)
+        } else if (taxon.has('col')) {
+            parents.push(taxon.get('col') as string)
         }
         return parents
     }
@@ -135,7 +137,17 @@ function getCoveringTaxon (taxa: catalog.Entity[]): string|null {
         }
     }
 
-    return ancestors.length ? makeGbifUri(ancestors[ancestors.length - 1])['@id'] as string : null
+    if (!ancestors.length) {
+        return null
+    }
+
+    const ancestor = ancestors[ancestors.length - 1]
+    const ancestorEntity = allTaxa.find(taxon => taxon.get('col') === ancestor)
+    if (ancestorEntity) {
+        return makeTaxonUri(ancestorEntity.get('id') as string)['@id'] as string
+    }
+
+    return makeColUri(ancestor)['@id'] as string
 }
 
 function mapEntities (names: string[], entities: catalog.Entity[]): catalog.Entity[] {
@@ -166,8 +178,16 @@ function makeGbifUri (id: string): NodeObject {
     return { '@id': `https://gbif.org/species/${id}` }
 }
 
+function makeColUri (id: string): NodeObject {
+    return { '@id': `https://www.catalogueoflife.org/data/taxon/${id}` }
+}
+
 function makeWorkUri (id: string): NodeObject {
     return { '@id': `${PREFIX}catalog/${id}` }
+}
+
+function makeTaxonUri (id: string): NodeObject {
+    return { '@id': `${PREFIX}taxon/${id}` }
 }
 
 function makeScientificNameUri (id: string): NodeObject {
@@ -231,7 +251,7 @@ function makeLinkedDataForPublisher (publisher: catalog.Entity): NodeObject {
 
 function makeLinkedDataForTaxon (taxon: catalog.Entity): NodeObject {
     const node: NodeObject = {
-        '@id': `${PREFIX}taxon/${taxon.get('id')}`,
+        '@id': makeTaxonUri(taxon.get('id') as string)['@id'],
         '@type': 'dwc:Taxon',
         'dwc:scientificName': taxon.get('name'),
     }
@@ -244,6 +264,9 @@ function makeLinkedDataForTaxon (taxon: catalog.Entity): NodeObject {
     if (taxon.has('qid')) {
         ids.push(makeWikidataUri(taxon.get('qid') as string))
     }
+    if (taxon.has('col')) {
+        ids.push(makeColUri(taxon.get('col') as string))
+    }
     if (taxon.has('gbif')) {
         ids.push(makeGbifUri(taxon.get('gbif') as string))
     }
@@ -255,46 +278,98 @@ function makeLinkedDataForTaxon (taxon: catalog.Entity): NodeObject {
 }
 
 function makeLinkedDataForTaxa (files: Catalog): NodeObject[] {
-    const nodes = []
-    const gbifTaxa: Record<string, NodeObject> = {}
+    const nodes: Record<string, NodeObject> = {}
+    const parents: Record<string, Set<string>> = {}
+
+    const colIndex = files.taxa.entities.reduce((index, taxon) => {
+        if (taxon.has('col')) {
+            index[taxon.get('col') as string] = taxon.get('id') as string
+        }
+        return index
+    }, {} as Record<string, string>)
+
+    const getUriFromCol = (col: string|undefined|null): NodeObject => {
+        if (col == null) {
+            // No parent -> Biota
+            return makeTaxonUri('T141')
+        } else if (col in colIndex) {
+            return makeTaxonUri(colIndex[col])
+        } else {
+            return makeColUri(col)
+        }
+    }
+
+    const getUriFromGbif = (gbif: string|undefined|null): NodeObject => {
+        if (gbif == null) {
+            // No parent -> Biota
+            return makeTaxonUri('T141')
+        } else {
+            return makeGbifUri(gbif)
+        }
+    }
+
+    const addParent = (child: string, parent: string) => {
+        if (!parents[child]) {
+            parents[child] = new Set()
+        }
+
+        parents[child].add(parent)
+    }
 
     for (const taxon of files.taxa.entities) {
         const node = makeLinkedDataForTaxon(taxon)
 
-        const ancestors = taxon.get('ancestors_gbif') ?? []
-        if (ancestors.length) {
-            node['dwc:parentNameUsageID'] = makeGbifUri(ancestors[ancestors.length - 1])
-        } else if (taxon.get('id') !== 'T141') {
-            node['dwc:parentNameUsageID'] = { '@id': `${PREFIX}taxon/T141` }
+        const ancestors = taxon.get('ancestors_col') ?? []
+        if (taxon.get('id') !== 'T141') {
+            node['dwc:parentNameUsageID'] = getUriFromCol(ancestors.length ? ancestors[ancestors.length - 1] : null)
+        }
+        if (taxon.has('accepted_col')) {
+            node['dwc:acceptedNameUsageID'] = getUriFromCol(taxon.get('accepted_col') as string)
         }
 
         for (let i = 0; i < ancestors.length; i++) {
-            gbifTaxa[ancestors[i]] = {
-                ...makeGbifUri(ancestors[i]),
-                'dwc:taxonRank': makeTaxonRankUri(GBIF_RANKS[i]),
-                'dwc:parentNameUsageID': i ? makeGbifUri(ancestors[i - 1]) : { '@id': `${PREFIX}taxon/T141` }
+            const parent = getUriFromCol(i ? ancestors[i - 1] : null)
+            addParent(getUriFromCol(ancestors[i])['@id'] as string, parent['@id'] as string)
+        }
+
+        if (taxon.has('children_col')) {
+            const children = taxon.get('children_col') as string[]
+            for (const child of children) {
+                addParent(getUriFromCol(child)['@id'] as string, node['@id'] as string)
+            }
+        }
+
+        // GBIF
+        if (taxon.has('ancestors_gbif')) {
+            const ancestors = taxon.get('ancestors_gbif') as string[]
+            for (let i = 0; i < ancestors.length; i++) {
+                const ancestor = makeGbifUri(ancestors[i])['@id'] as string
+                addParent(ancestor, getUriFromGbif(ancestors[i - 1])['@id'] as string)
+                nodes[ancestor] = { '@id': ancestor, 'dwc:taxonRank': makeTaxonRankUri(GBIF_RANKS[i]) }
             }
         }
 
         if (taxon.has('children_gbif')) {
             const children = taxon.get('children_gbif') as string[]
-            node['@reverse'] = { 'dwc:parentNameUsageID': children.map(makeGbifUri) as unknown as string }
-
             const childRank = GBIF_RANKS[ancestors.length]
             for (const child of children) {
-                gbifTaxa[child] = {
-                    ...makeGbifUri(child),
-                    'dwc:taxonRank': makeTaxonRankUri(childRank),
-                }
+                const childUri = makeGbifUri(child)['@id'] as string
+                addParent(childUri, node['@id'] as string)
+                nodes[childUri] = { '@id': childUri, 'dwc:taxonRank': makeTaxonRankUri(childRank) }
             }
         }
 
-        nodes.push(node)
+        nodes[node['@id'] as string] = node
     }
 
-    nodes.push(...Object.values(gbifTaxa))
+    for (const child in parents) {
+        if (!nodes[child]) { nodes[child] = { '@id': child } }
+        for (const parent of parents[child]) {
+            nodes[child]['dwc:parentNameUsageID'] = { '@id': parent }
+        }
+    }
 
-    return nodes
+    return Object.values(nodes)
 }
 
 function makeLinkedDataForScientificName (name: AmendedTaxon): NodeObject {
@@ -329,11 +404,11 @@ function makeLinkedDataForScientificName (name: AmendedTaxon): NodeObject {
     }
 
     const identifiers = []
+    if (name.colTaxonID) {
+        identifiers.push(makeColUri(name.colTaxonID))
+    }
     if (name.gbifTaxonID) {
         identifiers.push(makeGbifUri(name.gbifTaxonID))
-    }
-    if (name.colTaxonID) {
-        identifiers.push({ '@id': `https://www.checklistbank.org/dataset/309120/taxon/${name.colTaxonID}` })
     }
 
     if (identifiers.length) {
@@ -383,7 +458,7 @@ function makeLinkedDataForResource (work: catalog.Entity, files: Catalog, resour
     const taxonNames = resource.get('taxon') ?? work.get('taxon')
     if (taxonNames) {
         const taxa = mapEntities(taxonNames as string[], files.taxa.entities)
-        const coveringTaxon = taxa.length ? getCoveringTaxon(taxa) : null
+        const coveringTaxon = taxa.length ? getCoveringTaxon(taxa, files.taxa.entities) : null
         if (coveringTaxon !== null) {
             node['ac:taxonCoverage'] = { '@id': coveringTaxon }
         }
