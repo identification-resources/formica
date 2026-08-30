@@ -46,6 +46,9 @@ const SCOPES: Record<string, [string, string]> = {
     'nypmhs': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
     'nymphs (instar V)': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
     'nymphs (instar IV)': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
+    'nymphs (instar III)': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
+    'nymphs (instar II)': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
+    'nymphs (instar I)': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/larva'],
     'eggs': ['dwciri:lifeStage', 'http://rs.gbif.org/vocabulary/gbif/life_stage/embryo'],
 
     // plant life stage
@@ -67,6 +70,9 @@ const SCOPES: Record<string, [string, string]> = {
     'alatae': ['dwc:caste', 'alate'],
     'apterae': ['dwc:caste', 'aptera'],
     'viviparae': ['dwc:caste', 'vivipara'],
+    'brachypterae': ['dwc:caste', 'brachypterae'],
+    'macropterae': ['dwc:caste', 'macropterae'],
+    'micropterae': ['dwc:caste', 'micropterae'],
 
     // evidence
     'nests': ['ac:subjectPartLiteral', 'nest'],
@@ -77,6 +83,7 @@ const SCOPES: Record<string, [string, string]> = {
     'bones (skulls)': ['ac:subjectPart', 'http://rs.tdwg.org/acpart/values/p0027'],
     'bones (upper jaws)': ['ac:subjectPart', 'http://rs.tdwg.org/acpart/values/p0028'],
     'bones (lower jaws)': ['ac:subjectPart', 'http://rs.tdwg.org/acpart/values/p0029'],
+    'spermathecae': ['ac:subjectPartLiteral', 'spermathecae'],
 }
 const PREFIXES = {
     'ac': 'http://rs.tdwg.org/ac/terms/',
