@@ -1,3 +1,17 @@
+## [0.10.5](https://github.com/identification-resources/formica/compare/v0.10.4...v0.10.5) (2026-09-05)
+
+
+### Bug Fixes
+
+* **catalog:** ensure ac:taxonCoverage is always set in linked data ([d57944d](https://github.com/identification-resources/formica/commit/d57944d82992657f3167f0333f38dd0fe4bca3bb))
+* **catalog:** fix .ttl output for linked data ([d057ac2](https://github.com/identification-resources/formica/commit/d057ac21cd6199c9a629d4bb55d76861cd639af5))
+* **catalog:** fix link to resource in linked data ([aac7122](https://github.com/identification-resources/formica/commit/aac7122ce40c19d8a974a722e15f35a39dce4427))
+
+
+### Features
+
+* **catalog:** add validator script for linked data ([c602e91](https://github.com/identification-resources/formica/commit/c602e91e230ace123b53be1d38b084f2f4ca4948))
+
 ## [0.10.4](https://github.com/identification-resources/formica/compare/v0.10.3...v0.10.4) (2026-08-30)
 
 
