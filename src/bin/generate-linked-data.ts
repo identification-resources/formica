@@ -193,6 +193,10 @@ function makeWorkUri (id: string): NodeObject {
     return { '@id': `${PREFIX}catalog/${id}` }
 }
 
+function makeResourceUri (id: string): NodeObject {
+    return { '@id': `${PREFIX}resource/${id}` }
+}
+
 function makeTaxonUri (id: string): NodeObject {
     return { '@id': `${PREFIX}taxon/${id}` }
 }
@@ -433,16 +437,17 @@ function makeLinkedDataForResource (work: catalog.Entity, files: Catalog, resour
     }
 
     if (files.resources[resourceId] && files.resources[resourceId].metadata.catalog) {
-        resource.fields = files.resources[resourceId].metadata.catalog as Record<string, Value>
+        resource.fields = { ...files.resources[resourceId].metadata.catalog as Record<string, Value> }
     }
 
     if (!resource.has('language')) {
         resource.fields.language = work.get('language') as Value
     }
 
+    resource.fields.id = resourceId
+
     const node: NodeObject = {
-        ...makeLinkedDataForWork(resource, files),
-        '@id': `${PREFIX}resource/${resourceId}`,
+        ...makeLinkedDataForWork(resource, files, makeResourceUri),
         '@type': 'bibo:DocumentPart',
     }
 
@@ -542,9 +547,9 @@ function makeLinkedDataForResource (work: catalog.Entity, files: Catalog, resour
     return node
 }
 
-function makeLinkedDataForWork (work: catalog.Entity, files: Catalog): NodeObject {
+function makeLinkedDataForWork (work: catalog.Entity, files: Catalog, makeUri: typeof makeWorkUri = makeWorkUri): NodeObject {
     const id = work.get('id') as string
-    const node: NodeObject = makeWorkUri(id)
+    const node: NodeObject = makeUri(id)
     node['@reverse'] = {}
 
     const languages = work.get('language') as string[]
@@ -694,33 +699,33 @@ function makeLinkedDataForWork (work: catalog.Entity, files: Catalog): NodeObjec
         const containers = work.get('part_of') as string[]
 
         if ((work.get('key_type') as string[]).includes('supplement')) {
-            node['bibo:annotates'] = containers.map(makeWorkUri)
+            node['bibo:annotates'] = containers.map(makeUri)
         } else {
-            node['dcterms:isPartOf'] = containers.map(makeWorkUri)
+            node['dcterms:isPartOf'] = containers.map(makeUri)
 
             for (const container of containers) {
                 if (!Array.isArray(node['@reverse']['dcterms:hasPart'])) {
                     node['@reverse']['dcterms:hasPart'] = []
                 }
-                node['@reverse']['dcterms:hasPart'].push(makeWorkUri(container))
+                node['@reverse']['dcterms:hasPart'].push(makeUri(container))
             }
         }
     }
 
     if (work.has('listed_in')) {
         const referers = work.get('listed_in') as string[]
-        node['bibo:citedBy'] = node['dcterms:isReferencedBy'] = referers.map(makeWorkUri)
+        node['bibo:citedBy'] = node['dcterms:isReferencedBy'] = referers.map(makeUri)
 
         for (const referer of referers) {
             if (!Array.isArray(node['@reverse']['bibo:cites'])) {
                 node['@reverse']['bibo:cites'] = []
             }
-            node['@reverse']['bibo:cites'].push(makeWorkUri(referer))
+            node['@reverse']['bibo:cites'].push(makeUri(referer))
 
             if (!Array.isArray(node['@reverse']['dcterms:references'])) {
                 node['@reverse']['dcterms:references'] = []
             }
-            node['@reverse']['dcterms:references'].push(makeWorkUri(referer))
+            node['@reverse']['dcterms:references'].push(makeUri(referer))
         }
     }
 
@@ -741,8 +746,8 @@ function makeLinkedDataForWork (work: catalog.Entity, files: Catalog): NodeObjec
             return language
         })
 
-        node['bibo:translationOf'] = originals.filter((_, i) => originalLanguages[i] !== languages.join()).map(makeWorkUri)
-        node['dcterms:isVersionOf'] = originals.filter(id => work.get('id') !== id).map(makeWorkUri)
+        node['bibo:translationOf'] = originals.filter((_, i) => originalLanguages[i] !== languages.join()).map(makeUri)
+        node['dcterms:isVersionOf'] = originals.filter(id => work.get('id') !== id).map(makeUri)
     }
 
     return node
