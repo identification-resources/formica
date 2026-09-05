@@ -1,3 +1,5 @@
+## [0.10.6](https://github.com/identification-resources/formica/compare/v0.10.5...v0.10.6) (2026-09-05)
+
 ## [0.10.5](https://github.com/identification-resources/formica/compare/v0.10.4...v0.10.5) (2026-09-05)
 
 
