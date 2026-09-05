@@ -4,7 +4,7 @@ import { existsSync as doesFileExist, promises as fs } from 'fs'
 import * as path from 'path'
 import * as util from 'util'
 
-import type { JsonLdDocument, NodeObject } from 'jsonld'
+import type { NodeObject } from 'jsonld'
 import * as jsonld from 'jsonld'
 import * as N3 from 'n3'
 
