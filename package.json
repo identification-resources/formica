@@ -11,6 +11,7 @@
     "loir-validate-catalog": "lib/bin/validate-catalog.js",
     "loir-validate-resources": "lib/bin/validate-resources-text.js",
     "loir-validate-integrity": "lib/bin/validate-integrity.js",
+    "loir-validate-linked-data": "lib/bin/validate-linked-data.js",
     "loir-resources-process": "lib/bin/process-resources.js",
     "loir-resources-index": "lib/bin/process-resources-index.js",
     "loir-resources-check-diff": "lib/bin/check-resources-diff.js",
@@ -40,6 +41,7 @@
     "js-yaml": "^5.2.1",
     "jsonld": "^9.0.0",
     "n3": "^2.1.1",
+    "shex": "^1.0.0-alpha.30",
     "spdx-license-list": "^6.6.0"
   },
   "devDependencies": {
