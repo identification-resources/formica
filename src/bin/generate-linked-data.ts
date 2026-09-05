@@ -829,6 +829,10 @@ class Writer {
     end () {
         if (this.format === 'jsonld') {
             process.stdout.write('    null\n  ]\n}\n')
+        } else if (this.format === 'nquads') {
+            // no ending required
+        } else {
+            this.n3parser.end()
         }
     }
 }
