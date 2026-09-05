@@ -145,7 +145,7 @@ function getCoveringTaxon (taxa: catalog.Entity[], allTaxa: catalog.Entity[]): s
     }
 
     if (!ancestors.length) {
-        return null
+        return makeTaxonUri('T141')['@id'] as string
     }
 
     const ancestor = ancestors[ancestors.length - 1]
