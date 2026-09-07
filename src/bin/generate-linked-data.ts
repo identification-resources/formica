@@ -529,7 +529,7 @@ function makeLinkedDataForResource (work: catalog.Entity, files: Catalog, resour
         node['ac:tag'] = tags
     }
 
-    if (files.resources[resourceId].taxa) {
+    if (files.resources[resourceId]?.taxa) {
         const leafs = new Set(files.resources[resourceId].taxa.map(taxon => taxon.scientificNameID))
         const taxa = []
         for (const taxon of files.resources[resourceId].taxa) {
@@ -760,9 +760,19 @@ function* makeLinkedDataForWorks (files: Catalog): Generator<NodeObject> {
         const id = work.get('id') as string
         const node = makeLinkedDataForWork(work, files)
 
+        const resources: Array<ResourceId|undefined> = []
+
         let resourceIndex = 1
         let resourceId
         while ((resourceId = `${id}:${resourceIndex++}`) in files.resources) {
+            resources.push(resourceId)
+        }
+
+        if (!resources.length) {
+            resources.push(undefined)
+        }
+
+        for (const resourceId of resources) {
             const resource = makeLinkedDataForResource(work, files, resourceId)
 
             if (!Array.isArray(node['dcterms:hasPart'])) {
