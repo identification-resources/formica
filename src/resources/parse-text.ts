@@ -420,6 +420,7 @@ export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Res
         } catch (error) {
             if (error instanceof SyntaxError) {
                 errors.push(error)
+                continue
             }
 
             throw error
