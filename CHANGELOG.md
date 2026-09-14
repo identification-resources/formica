@@ -1,3 +1,10 @@
+## [0.11.1](https://github.com/identification-resources/formica/compare/v0.11.0...v0.11.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* **resources:** show errors of all sub-resources ([aba6f1f](https://github.com/identification-resources/formica/commit/aba6f1fd4cd9e6f0b980a2fbab96ff98174d311f))
+
 # [0.11.0](https://github.com/identification-resources/formica/compare/v0.10.6...v0.11.0) (2026-09-14)
 
 
