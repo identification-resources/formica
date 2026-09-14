@@ -1,3 +1,15 @@
+# [0.11.0](https://github.com/identification-resources/formica/compare/v0.10.6...v0.11.0) (2026-09-14)
+
+
+### Bug Fixes
+
+* **resources:** correctly output placeholder resources in linked data ([e117c8a](https://github.com/identification-resources/formica/commit/e117c8afff34f10d15dde91113f8448b89eb0eb0))
+
+
+### Features
+
+* **resources:** add support for "[incertae sedis]" ([3d9304b](https://github.com/identification-resources/formica/commit/3d9304b291c6ad0a73689931a87a8861d475eec6))
+
 ## [0.10.6](https://github.com/identification-resources/formica/compare/v0.10.5...v0.10.6) (2026-09-05)
 
 ## [0.10.5](https://github.com/identification-resources/formica/compare/v0.10.4...v0.10.5) (2026-09-05)
