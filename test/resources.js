@@ -371,4 +371,206 @@ Neopachygaster Austin, 1901
             assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Neopachygaster meromelas (Dufour, 1841)')
         })
     })
+
+    suite('incertae sedis', () => {
+        test('handles incertae sedis', () => {
+            const [resource] = resources.parseTextFile(`---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  Bleteogonus
+    beckeri Frey-G.
+  [incertae sedis]
+    lynceus F.
+`, 'T1')
+            assert.strictEqual(resource.taxa['T1:1:3'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Rhyparochromus beckeri Frey-G.')
+            assert.strictEqual(resource.taxa['T1:1:3'].subgenus, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:3'].infragenericEpithet, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:3'].parentNameUsageID, 'T1:1:2')
+
+            assert.strictEqual(resource.taxa['T1:1:4'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Rhyparochromus lynceus F.')
+            assert.strictEqual(resource.taxa['T1:1:4'].subgenus, undefined)
+            assert.strictEqual(resource.taxa['T1:1:4'].infragenericEpithet, undefined)
+            assert.strictEqual(resource.taxa['T1:1:4'].parentNameUsageID, 'T1:1:1')
+        })
+
+        test('handles diffs adding incertae sedis', () => {
+            const newText = `---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  Bleteogonus
+    beckeri Frey-G.
+  [incertae sedis]
+    lynceus F.
+`
+            const oldText = `---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  Bleteogonus
+    beckeri Frey-G.
+    lynceus F.
+`
+
+            const dwc = [[null, ['T:1:1'], ['T:1:2'], ['T:1:3'], ['T:1:4']]]
+            const [resource] = resources.parseTextFile(newText, 'T1', { txt: oldText, dwc })
+            assert.strictEqual(resource.taxa['T1:1:3'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Rhyparochromus beckeri Frey-G.')
+            assert.strictEqual(resource.taxa['T1:1:3'].subgenus, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:3'].infragenericEpithet, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:3'].parentNameUsageID, 'T1:1:2')
+
+            assert.strictEqual(resource.taxa['T1:1:4'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Rhyparochromus lynceus F.')
+            assert.strictEqual(resource.taxa['T1:1:4'].subgenus, undefined)
+            assert.strictEqual(resource.taxa['T1:1:4'].infragenericEpithet, undefined)
+            assert.strictEqual(resource.taxa['T1:1:4'].parentNameUsageID, 'T1:1:1')
+        })
+
+        test('handles diffs removing incertae sedis', () => {
+            const newText = `---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  Bleteogonus
+    beckeri Frey-G.
+    lynceus F.
+`
+            const oldText = `---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  Bleteogonus
+    beckeri Frey-G.
+  [incertae sedis]
+    lynceus F.
+`
+
+            const dwc = [[null, ['T:1:1'], ['T:1:2'], ['T:1:3'], ['T:1:4']]]
+            const [resource] = resources.parseTextFile(newText, 'T1', { txt: oldText, dwc })
+            assert.strictEqual(resource.taxa['T1:1:3'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Rhyparochromus beckeri Frey-G.')
+            assert.strictEqual(resource.taxa['T1:1:3'].subgenus, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:3'].infragenericEpithet, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:3'].parentNameUsageID, 'T1:1:2')
+
+            assert.strictEqual(resource.taxa['T1:1:4'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Rhyparochromus lynceus F.')
+            assert.strictEqual(resource.taxa['T1:1:4'].subgenus, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:4'].infragenericEpithet, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:4'].parentNameUsageID, 'T1:1:2')
+        })
+
+        test('handles diffs modifying into incertae sedis', () => {
+            const newText = `---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  [incertae sedis]
+    beckeri Frey-G.
+    lynceus F.
+`
+            const oldText = `---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  Bleteogonus
+    beckeri Frey-G.
+    lynceus F.
+`
+
+            const dwc = [[null, ['T:1:1'], ['T:1:2'], ['T:1:3'], ['T:1:4']]]
+            const [resource] = resources.parseTextFile(newText, 'T1', { txt: oldText, dwc })
+            assert.strictEqual(resource.taxa['T1:1:3'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Rhyparochromus beckeri Frey-G.')
+            assert.strictEqual(resource.taxa['T1:1:3'].subgenus, undefined)
+            assert.strictEqual(resource.taxa['T1:1:3'].infragenericEpithet, undefined)
+            assert.strictEqual(resource.taxa['T1:1:3'].parentNameUsageID, 'T1:1:1')
+
+            assert.strictEqual(resource.taxa['T1:1:4'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Rhyparochromus lynceus F.')
+            assert.strictEqual(resource.taxa['T1:1:4'].subgenus, undefined)
+            assert.strictEqual(resource.taxa['T1:1:4'].infragenericEpithet, undefined)
+            assert.strictEqual(resource.taxa['T1:1:4'].parentNameUsageID, 'T1:1:1')
+        })
+
+        test('handles diffs modifying from incertae sedis', () => {
+            const newText = `---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  Bleteogonus
+    beckeri Frey-G.
+    lynceus F.
+`
+            const oldText = `---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  [incertae sedis]
+    beckeri Frey-G.
+    lynceus F.
+`
+
+            const dwc = [[null, ['T:1:1'], ['T:1:2'], ['T:1:3']]]
+            const [resource] = resources.parseTextFile(newText, 'T1', { txt: oldText, dwc })
+            assert.strictEqual(resource.taxa['T1:1:2'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Rhyparochromus beckeri Frey-G.')
+            assert.strictEqual(resource.taxa['T1:1:2'].subgenus, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:2'].infragenericEpithet, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:2'].parentNameUsageID, 'T1:1:4')
+
+            assert.strictEqual(resource.taxa['T1:1:3'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Rhyparochromus lynceus F.')
+            assert.strictEqual(resource.taxa['T1:1:3'].subgenus, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:3'].infragenericEpithet, 'Bleteogonus')
+            assert.strictEqual(resource.taxa['T1:1:3'].parentNameUsageID, 'T1:1:4')
+        })
+
+        test('errors for corrections incertae sedis', () => {
+            assert.throws(() => {
+                resources.parseTextFile(`---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  [incertae sedis]
+    > Bleteogonus
+    lynceus F.
+`, 'T1')
+            }, {
+                name: 'SyntaxError',
+                message: '[7:1] Cannot apply a correction after skipping a rank'
+            })
+        })
+
+        test('errors for synonyms of incertae sedis', () => {
+            assert.throws(() => {
+                resources.parseTextFile(`---
+levels: [genus, subgenus, species]
+---
+
+Rhyparochromus
+  [incertae sedis]
+    = Bleteogonus
+    lynceus F.
+`, 'T1')
+            }, {
+                name: 'SyntaxError',
+                message: '[7:1] Cannot define a synonym after skipping a rank'
+            })
+        })
+    })
 })

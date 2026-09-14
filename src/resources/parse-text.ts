@@ -34,6 +34,15 @@ const FLAGS: ResourceFlag[] = [
 const RESOURCE_DELIMITER = '\n\n===\n\n'
 const INDENT = 2
 
+function isStructuralLine (line: string): boolean {
+    return line.startsWith('[indet]') || line.startsWith('[incertae sedis]')
+}
+
+function isNameLine (line: string): boolean {
+    line = line.trim()
+    return !line.startsWith('> ') && !isStructuralLine(line)
+}
+
 function makeParseError (message: string, line: number, column: number = 1): SyntaxError {
     return new SyntaxError(`[${line}:${column}] ${message}`)
 }
@@ -177,7 +186,7 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
     const previous = { id: '', indent: 0, group: { isLeaf: false, indent: 0 }, errors: <SyntaxError[]>[] }
 
     for (const line of content) {
-        const hasOriginalId = line.type !== ResourceDiffType.Added && !/^\s*(\[indet\]|> )/.test(line.original ?? line.text as string)
+        const hasOriginalId = line.type !== ResourceDiffType.Added && isNameLine(line.original ?? line.text as string)
         if (hasOriginalId) {
             id++
         }
@@ -205,7 +214,7 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         // Update parentage
         if (lineIndent > previous.indent) {
             // Do not count synonyms as parents (unless this is correcting a typo in the synonym)
-            if (data[previous.id] && data[previous.id].taxonomicStatus === 'accepted' || name.startsWith('> ')) {
+            if (data[previous.id] && (data[previous.id].taxonomicStatus === 'accepted' || name.startsWith('> '))) {
                 parents.push(previous.id)
             } else {
                 parents.push(null)
@@ -224,9 +233,14 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
 
         previous.indent = lineIndent
 
-        // Do not process "indet" lines further, as they only serve to indicate
-        // that subtaxa are explicitely omitted
-        if (name.startsWith('[indet]')) {
+        if (name.startsWith('[incertae sedis]')) {
+            previous.id = ''
+            previous.group.indent = previous.indent
+        }
+
+        // Do not process "indet" or "incertae sedis" lines further, as they only
+        // serve as structural indicators.
+        if (isStructuralLine(name)) {
             errors.push(...previous.errors)
             previous.errors.length = 0
             previous.group.isLeaf = lineIndent / INDENT >= leafTaxonIndex
@@ -273,17 +287,20 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
 
         // Amend "parent" with corrections, exit
         if (item.taxonomicStatus === 'incorrect') {
-            if (parent.taxonomicStatus !== 'accepted') {
-                // Remove corrected synonym from parentage
-                parents[parents.length - 1] = null
-            }
-
             if (parent.incorrect) {
                 errors.push(makeParseError('Cannot apply a correction to a previous correction', lineNumber))
                 continue
             } else if (parentId === null) {
                 errors.push(makeParseError('Cannot apply a correction to nothing', lineNumber))
                 continue
+            } else if (parents.indexOf(parentId) !== parents.length - 1) {
+                errors.push(makeParseError('Cannot apply a correction after skipping a rank', lineNumber))
+                continue
+            }
+
+            if (parent.taxonomicStatus !== 'accepted') {
+                // Remove corrected synonym from parentage
+                parents[parents.length - 1] = null
             }
 
             parent.incorrect = { ...parent }
@@ -301,8 +318,17 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
             continue
         }
 
-        // Add more classification info
+        // Validate synonyms
         const isSynonym = item.taxonomicStatus !== 'accepted'
+        if (isSynonym) {
+            if (parentId === null) {
+                errors.push(makeParseError('Cannot define a synonym of nothing', lineNumber))
+            } else if (parents.indexOf(parentId) !== parents.length - 1) {
+                errors.push(makeParseError('Cannot define a synonym after skipping a rank', lineNumber))
+            }
+        }
+
+        // Add more classification info
         if (isSynonym) {
             item.higherClassification = parent.higherClassification
         } else if (parent.higherClassification) {
