@@ -13,7 +13,7 @@ const MAIN_RANKS: Rank[] = [
     'species'
 ]
 
-const DWC_RANKS: DwcRank[] = [
+const DWC_RANKS = [
     'kingdom',
     'phylum',
     'class',
@@ -22,7 +22,7 @@ const DWC_RANKS: DwcRank[] = [
     'subfamily',
     'genus',
     'subgenus'
-]
+] as const
 
 const FLAGS: ResourceFlag[] = [
     'MISSING_TAXA',
@@ -249,7 +249,7 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
 
         const parentId = parents.reduce((grandparent, parent) => parent ?? grandparent, null)
         const parent = parentId === null ? {} as WorkingTaxon : data[parentId]
-        let item
+        let item: WorkingTaxon
         const itemErrors = []
 
         try {
@@ -266,15 +266,13 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         }
 
         // Add higher classification info
-        const itemAsObject = item as { [index: string]: unknown }
-        const parentAsObject = parent as { [index: string]: unknown }
         for (const rank of DWC_RANKS) {
-            itemAsObject[rank] = undefined
-            if (parentAsObject[rank]) {
-                itemAsObject[rank] = parentAsObject[rank]
+            item[rank] = undefined
+            if (parent[rank]) {
+                item[rank] = parent[rank]
             }
             if (item.taxonRank === rank) {
-                itemAsObject[rank] = item.scientificNameOnly
+                item[rank] = item.scientificNameOnly
             }
         }
 
@@ -304,11 +302,9 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
             }
 
             parent.incorrect = { ...parent }
-            for (const key in item) {
-                if (key !== 'taxonomicStatus' && key !== 'verbatimIdentification') {
-                    parentAsObject[key] = itemAsObject[key]
-                }
-            }
+
+            const { taxonomicStatus, verbatimIdentification } = parent
+            Object.assign(parent, item, { taxonomicStatus, verbatimIdentification })
 
             // If "parent" is corrected, its errors can be dropped
             previous.errors.length = 0

@@ -20,7 +20,6 @@ interface WorkError extends FieldError {
 }
 
 type Rank = string
-type DwcRank = Rank
 type TaxonStatus = string
 
 type TaxonId = string
