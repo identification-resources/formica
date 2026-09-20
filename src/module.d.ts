@@ -62,6 +62,7 @@ interface DynamicProperties {
     synonymUncertain?: true,
     identifiable?: false,
     indistinguishableFrom?: Array<TaxonId>,
+    continuesIn?: Array<ResourceId>,
 }
 
 interface WorkingTaxon extends TaxonBase {

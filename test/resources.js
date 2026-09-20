@@ -573,4 +573,143 @@ Rhyparochromus
             })
         })
     })
+
+    suite('continuesIn', () => {
+        test('handles "continues in"', () => {
+            const [resource] = resources.parseTextFile(`---
+levels: [superfamily, family, genus]
+---
+
+Pentatomoidea
+  Cydnidae
+    Cydnus
+  Pentatomidae
+    [> T2:1]
+`, 'T1')
+            assert.strictEqual(resource.taxa['T1:1:4'].taxonRank, 'family')
+            assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Pentatomidae')
+            assert.strictEqual(resource.taxa['T1:1:4'].dynamicProperties, '{"continuesIn":["T2:1"]}')
+        })
+
+        test('handles diffs adding "continues in"', () => {
+            const newText = `---
+levels: [superfamily, family, genus]
+---
+
+Pentatomoidea
+  Cydnidae
+    Cydnus
+  Pentatomidae
+    [> T2:1]
+`
+            const oldText = `---
+levels: [superfamily, family, genus]
+---
+
+Pentatomoidea
+  Cydnidae
+    Cydnus
+  Pentatomidae
+    [indet]
+`
+
+            const dwc = [[null, ['T:1:1'], ['T:1:2'], ['T:1:3'], ['T:1:4']]]
+            const [resource] = resources.parseTextFile(newText, 'T1', { txt: oldText, dwc })
+            assert.strictEqual(resource.taxa['T1:1:4'].taxonRank, 'family')
+            assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Pentatomidae')
+            assert.strictEqual(resource.taxa['T1:1:4'].dynamicProperties, '{"continuesIn":["T2:1"]}')
+        })
+
+        test('handles diffs removing "continues in"', () => {
+            const newText = `---
+levels: [superfamily, family, genus]
+---
+
+Pentatomoidea
+  Cydnidae
+    Cydnus
+  Pentatomidae
+    [indet]
+`
+            const oldText = `---
+levels: [superfamily, family, genus]
+---
+
+Pentatomoidea
+  Cydnidae
+    Cydnus
+  Pentatomidae
+    [> T2:1]
+`
+
+            const dwc = [[null, ['T:1:1'], ['T:1:2'], ['T:1:3'], ['T:1:4']]]
+            const [resource] = resources.parseTextFile(newText, 'T1', { txt: oldText, dwc })
+            assert.strictEqual(resource.taxa['T1:1:4'].taxonRank, 'family')
+            assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Pentatomidae')
+            assert.strictEqual(resource.taxa['T1:1:4'].dynamicProperties, undefined)
+        })
+
+        test('handles diffs modifying into "continues in"', () => {
+            const newText = `---
+levels: [genus, species]
+---
+
+Rhyparochromus
+  beckeri Frey-G.
+  [> T2:1]
+`
+            const oldText = `---
+levels: [genus, species]
+---
+
+Rhyparochromus
+  beckeri Frey-G.
+  lynceus F.
+`
+
+            const dwc = [[null, ['T:1:1'], ['T:1:2'], ['T:1:3'], ['T:1:4']]]
+            const [resource] = resources.parseTextFile(newText, 'T1', { txt: oldText, dwc })
+            assert.strictEqual(resource.taxa['T1:1:1'].dynamicProperties, '{"continuesIn":["T2:1"]}')
+            assert.strictEqual(resource.taxa['T1:1:3'], undefined)
+        })
+
+        test('handles diffs modifying from "continues in"', () => {
+            const newText = `---
+levels: [genus, species]
+---
+
+Rhyparochromus
+  beckeri Frey-G.
+  lynceus F.
+  vulgaris L.
+`
+            const oldText = `---
+levels: [genus, species]
+---
+
+Rhyparochromus
+  beckeri Frey-G.
+  [> T2:1]
+  vulgaris L.
+`
+
+            const dwc = [[null, ['T:1:1'], ['T:1:2'], ['T:1:3']]]
+            const [resource] = resources.parseTextFile(newText, 'T1', { txt: oldText, dwc })
+            assert.strictEqual(resource.taxa['T1:1:1'].taxonRank, 'genus')
+            assert.strictEqual(resource.taxa['T1:1:1'].scientificName, 'Rhyparochromus')
+            assert.strictEqual(resource.taxa['T1:1:1'].dynamicProperties, undefined)
+
+            assert.strictEqual(resource.taxa['T1:1:2'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:2'].scientificName, 'Rhyparochromus beckeri Frey-G.')
+            assert.strictEqual(resource.taxa['T1:1:2'].dynamicProperties, undefined)
+
+            assert.strictEqual(resource.taxa['T1:1:4'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:4'].scientificName, 'Rhyparochromus lynceus F.')
+            assert.strictEqual(resource.taxa['T1:1:4'].dynamicProperties, undefined)
+
+            assert.strictEqual(resource.taxa['T1:1:3'].taxonRank, 'species')
+            assert.strictEqual(resource.taxa['T1:1:3'].scientificName, 'Rhyparochromus vulgaris L.')
+            assert.strictEqual(resource.taxa['T1:1:3'].dynamicProperties, undefined)
+        })
+    })
 })

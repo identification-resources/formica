@@ -34,13 +34,15 @@ const FLAGS: ResourceFlag[] = [
 const RESOURCE_DELIMITER = '\n\n===\n\n'
 const INDENT = 2
 
+const CONTINUANCE_PATTERN = /^\[> (.+)\]$/
+
 function isStructuralLine (line: string): boolean {
     return line.startsWith('[indet]') || line.startsWith('[incertae sedis]')
 }
 
 function isNameLine (line: string): boolean {
     line = line.trim()
-    return !line.startsWith('> ') && !isStructuralLine(line)
+    return !line.startsWith('> ') && !isStructuralLine(line) && !CONTINUANCE_PATTERN.test(line)
 }
 
 function makeParseError (message: string, line: number, column: number = 1): SyntaxError {
@@ -153,28 +155,6 @@ function getTaxonChildren (parent: TaxonId|undefined, taxa: Record<TaxonId, Work
     return children
 }
 
-function processClusters (taxa: Record<TaxonId, WorkingTaxon>) {
-    for (const id in taxa) {
-        const taxon = taxa[id]
-        if (taxon.taxonomicStatus !== 'accepted' || !taxon.cluster) {
-            continue
-        }
-
-        if (taxon.cluster === '_') {
-            taxon.parsedDynamicProperties.identifiable = false
-        } else {
-            const siblings = getTaxonChildren(taxon.parentNameUsageID, taxa)
-                .filter(sibling => sibling.scientificNameID !== id)
-
-            taxon.parsedDynamicProperties.indistinguishableFrom = siblings
-                .filter(sibling => sibling.cluster === taxon.cluster)
-                .map(sibling => sibling.scientificNameID as string)
-        }
-
-        taxon.dynamicProperties = JSON.stringify(taxon.parsedDynamicProperties)
-    }
-}
-
 function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds: number[], offsetLine: number): Resource {
     const leafTaxonIndex = resource.metadata.levels.reduce((last, rank, i) => MAIN_RANKS.includes(rank) ? i : last, 0)
     const data = resource.taxa as Record<TaxonId, WorkingTaxon>
@@ -251,6 +231,16 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
 
         const parentId = parents.reduce((grandparent, parent) => parent ?? grandparent, null)
         const parent = parentId === null ? {} as WorkingTaxon : data[parentId]
+
+        if (CONTINUANCE_PATTERN.test(name)) {
+            const resourceId = name.match(CONTINUANCE_PATTERN)?.[1] as string
+            if (!Array.isArray(parent.parsedDynamicProperties.continuesIn)) {
+                parent.parsedDynamicProperties.continuesIn = []
+            }
+            parent.parsedDynamicProperties.continuesIn.push(resourceId)
+            continue
+        }
+
         let item: WorkingTaxon
         const itemErrors = []
 
@@ -361,7 +351,30 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
         throw mergeParserErrors(errors)
     }
 
-    processClusters(data)
+    for (const id in data) {
+        const taxon = data[id]
+
+        // Process clusters
+        if (taxon.taxonomicStatus === 'accepted' && taxon.cluster) {
+            if (taxon.cluster === '_') {
+                taxon.parsedDynamicProperties.identifiable = false
+            } else {
+                const siblings = getTaxonChildren(taxon.parentNameUsageID, data)
+                    .filter(sibling => sibling.scientificNameID !== id)
+
+                taxon.parsedDynamicProperties.indistinguishableFrom = siblings
+                    .filter(sibling => sibling.cluster === taxon.cluster)
+                    .map(sibling => sibling.scientificNameID as string)
+            }
+        }
+
+        // Set dynamic properties
+        taxon.dynamicProperties = JSON.stringify(taxon.parsedDynamicProperties)
+
+        if (taxon.dynamicProperties === '{}') {
+            delete taxon.dynamicProperties
+        }
+    }
 
     return resource
 }
