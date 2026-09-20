@@ -169,7 +169,9 @@ function capitalizeAuthors (authors: string): string {
 }
 
 export function parseName (name: string, rank: Rank, parent: WorkingTaxon): WorkingTaxon {
-    const item = {} as WorkingTaxon
+    const item: WorkingTaxon = {
+        parsedDynamicProperties: {}
+    }
 
     // Synonyms have the accepted name usage as 'parent'.
     const isSynonym = /^[+=>] /.test(name)
@@ -177,7 +179,7 @@ export function parseName (name: string, rank: Rank, parent: WorkingTaxon): Work
         item.taxonomicStatus = TAXONOMIC_STATUS[name[0]]
         name = name.slice(2)
         if (/^\? ?/.test(name)) {
-            item.dynamicProperties = '{"synonymUncertain":true}'
+            item.parsedDynamicProperties.synonymUncertain = true
             name = name.replace(/^\? ?/, '')
         }
         rank = getSynonymRank(name, parent.taxonRank as Rank)

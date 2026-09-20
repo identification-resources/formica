@@ -58,11 +58,18 @@ interface TaxonBase {
     dynamicProperties?: string,
 }
 
+interface DynamicProperties {
+    synonymUncertain?: true,
+    identifiable?: false,
+    indistinguishableFrom?: Array<TaxonId>,
+}
+
 interface WorkingTaxon extends TaxonBase {
     // Non-standard
     scientificNameOnly?: string,
     incorrect?: WorkingTaxon,
-    cluster?: string
+    cluster?: string,
+    parsedDynamicProperties: DynamicProperties
 }
 
 interface Taxon extends TaxonBase {

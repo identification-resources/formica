@@ -160,16 +160,18 @@ function processClusters (taxa: Record<TaxonId, WorkingTaxon>) {
             continue
         }
 
-        const dynamicProperties = taxon.dynamicProperties ? JSON.parse(taxon.dynamicProperties) : {}
-
         if (taxon.cluster === '_') {
-            dynamicProperties.identifiable = false
+            taxon.parsedDynamicProperties.identifiable = false
         } else {
-            const siblings = getTaxonChildren(taxon.parentNameUsageID, taxa).filter(sibling => sibling.scientificNameID !== id)
-            dynamicProperties.indistinguishableFrom = siblings.filter(sibling => sibling.cluster === taxon.cluster).map(sibling => sibling.scientificNameID)
+            const siblings = getTaxonChildren(taxon.parentNameUsageID, taxa)
+                .filter(sibling => sibling.scientificNameID !== id)
+
+            taxon.parsedDynamicProperties.indistinguishableFrom = siblings
+                .filter(sibling => sibling.cluster === taxon.cluster)
+                .map(sibling => sibling.scientificNameID as string)
         }
 
-        taxon.dynamicProperties = JSON.stringify(dynamicProperties)
+        taxon.dynamicProperties = JSON.stringify(taxon.parsedDynamicProperties)
     }
 }
 
