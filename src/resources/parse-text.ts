@@ -238,6 +238,10 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
                 parent.parsedDynamicProperties.continuesIn = []
             }
             parent.parsedDynamicProperties.continuesIn.push(resourceId)
+
+            errors.push(...previous.errors)
+            previous.errors.length = 0
+            previous.group.isLeaf = lineIndent / INDENT >= leafTaxonIndex
             continue
         }
 
@@ -344,6 +348,10 @@ function parseResourceContent (content: ResourceDiff, resource: Resource, oldIds
             previous.group.indent = previous.indent
             previous.group.isLeaf = lineIndent / INDENT >= leafTaxonIndex
         }
+    }
+
+    if (data[previous.id] && !previous.group.isLeaf) {
+        errors.push(makeParseError('Missing leaf taxon', lineNumber))
     }
 
     errors.push(...previous.errors)

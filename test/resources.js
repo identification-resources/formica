@@ -199,6 +199,18 @@ Cydnidae
   Legnotus
     limbosus`, 'T1')
             })
+
+            assert.throws(() => {
+                resources.parseTextFile(`---
+levels: [family, genus, species]
+---
+
+Cydnidae
+  Legnotus
+    limbosus
+Pentatomidae
+`, 'T1')
+            })
         })
 
         test('does not validate "indet." lines', () => {
