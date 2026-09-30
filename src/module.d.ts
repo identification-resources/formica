@@ -87,6 +87,7 @@ type ResourceFlag = string;
 interface ResourceMetadata {
     levels: Rank[],
     flags?: ResourceFlag[],
+    includes?: ResourceId[],
     catalog?: Record<string, Value>
 }
 

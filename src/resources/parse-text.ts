@@ -74,11 +74,6 @@ function parseHeader (header: string): ResourceMetadata {
         throw new SyntaxError('"scope" data should go in "catalog"')
     }
 
-    // No taxon ranks
-    if (levels.length === 0) {
-        throw new SyntaxError('Resource contains no taxa')
-    }
-
     // Invalid taxon ranks
     const invalidTaxonRanks = levels.filter(rank => !RANKS.includes(rank))
     if (invalidTaxonRanks.length) {
@@ -87,6 +82,7 @@ function parseHeader (header: string): ResourceMetadata {
 
     const metadata: ResourceMetadata = { levels }
 
+    // Bibliographical metadata
     if ('catalog' in config && typeof config.catalog === 'object' && config.catalog !== null) {
         const catalog: Record<string, string> = {}
         if ('id' in config.catalog) {
@@ -113,6 +109,7 @@ function parseHeader (header: string): ResourceMetadata {
         }
     }
 
+    // Resource flags
     if ('flags' in config) {
         if (!Array.isArray(config.flags)) {
             throw new SyntaxError('"flags" should be an array if present')
@@ -124,6 +121,24 @@ function parseHeader (header: string): ResourceMetadata {
         }
 
         metadata.flags = config.flags
+    }
+
+    // Includes
+    if ('includes' in config) {
+        if (!Array.isArray(config.includes)) {
+            throw new SyntaxError('"includes" should be an array if present')
+        }
+
+        const invalidIncludes = config.includes.filter(include => !/^[BT][1-9]\d*:[1-9]\d*$/.test(include))
+        if (invalidIncludes.length) {
+            throw new SyntaxError(`"includes" contains invalid values: ${invalidIncludes.join(', ')}`)
+        }
+
+        metadata.includes = config.includes
+    }
+
+    if (metadata.levels.length === 0 && !(metadata.includes && metadata.includes.length)) {
+        throw new SyntaxError('Resource contains no taxa')
     }
 
     return metadata
@@ -416,6 +431,11 @@ export function parseFile (file: string, id: WorkId, old?: ResourceHistory): Res
             workId: id,
             metadata: config,
             taxa: {}
+        }
+
+        if (config.levels.length === 0) {
+            resources.push(template)
+            continue
         }
 
         let diff

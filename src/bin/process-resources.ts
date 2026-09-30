@@ -367,6 +367,10 @@ class ResourceProcessor {
     async processResourceDwc (resource: Resource|AmendedResource, config: ResourceProcessorConfig): Promise<AmendedResource> {
         console.log(`${resource.workId}: matching ${resource.id}`)
 
+        if (!Object.values(resource.taxa).length) {
+            return resource as AmendedResource
+        }
+
         // If not all mappings will be rerun and the mappings are not already provided,
         // read the existing DwC files and add the corresponding mappings.
         const hasMappings = Object.values(resource.taxa).some(taxon => 'gbifAcceptedTaxonID' in taxon || 'colAcceptedTaxonID' in taxon)

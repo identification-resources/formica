@@ -24,16 +24,17 @@ function sortObject (object: Record<string, unknown>, sorter?: SortObjectCallbac
     return sorted
 }
 
-function addTaxon (index: Record<string, TaxonId[]>, id: string, taxon: string[]) {
+function addTaxon (index: Record<string, TaxonId[]>, id: string, taxonId: TaxonId) {
     if (!(id in index)) {
         index[id] = []
     }
-    index[id].push(taxon[0])
+    index[id].push(taxonId)
     index[id].sort(numericSort)
 }
 
 async function main (args: string[]): Promise<void> {
     const REPO_ROOT = path.resolve(args[0])
+    const COLUMNS = ['scientificNameID', 'gbifTaxonID', 'gbifAcceptedTaxonID', 'colTaxonID', 'colAcceptedTaxonID', 'dynamicProperties']
 
     const files = await fs.readdir(path.join(REPO_ROOT, 'txt'))
 
@@ -41,17 +42,16 @@ async function main (args: string[]): Promise<void> {
     const colIndex: Record<string, TaxonId[]> = {}
     const resourceIndex: Record<ResourceId, AmendedResourceMetadata> = {}
 
+    const taxa: Record<ResourceId, Array<Partial<AmendedTaxon>>> = {}
+
     await Promise.all(files.map(async function (fileName) {
         if (!fileName.endsWith('.txt')) { return }
         const id = fileName.slice(0, -4)
         const file = await fs.readFile(path.join(REPO_ROOT, 'txt', fileName), 'utf-8')
 
         return Promise.all(resources.parseTextFileHeader(file).map(async function (resource, index) {
-            const amendedResource = {
-                ...resource,
-                id: `${id}:${index + 1}`,
-                taxonCount: 0
-            }
+            const resourceId = `${id}:${index + 1}`
+            const amendedResource = { ...resource, id: resourceId, taxonCount: 0 }
 
             const dwcFile = path.join(REPO_ROOT, 'dwc', `${id}-${index + 1}.csv`)
             if (!fileExists(dwcFile)) {
@@ -59,33 +59,61 @@ async function main (args: string[]): Promise<void> {
             }
 
             const [header, ...dwc] = csv.parseCsv(await fs.readFile(dwcFile, 'utf-8'))
-            const gbifColumn = header.indexOf('gbifTaxonID')
-            const gbifAcceptedColumn = header.indexOf('gbifAcceptedTaxonID')
-            const colColumn = header.indexOf('colTaxonID')
-            const colAcceptedColumn = header.indexOf('colAcceptedTaxonID')
-            for (const taxon of dwc) {
-                const gbifId = taxon[gbifColumn]
-                if (gbifId) {
-                    addTaxon(gbifIndex, gbifId, taxon)
-                    if (taxon[gbifAcceptedColumn] !== taxon[gbifColumn]) {
-                        addTaxon(gbifIndex, taxon[gbifAcceptedColumn], taxon)
-                    }
-                }
-
-                const colId = taxon[colColumn]
-                if (colId) {
-                    addTaxon(colIndex, colId, taxon)
-                    if (taxon[colAcceptedColumn] !== taxon[colColumn]) {
-                        addTaxon(colIndex, taxon[colAcceptedColumn], taxon)
-                    }
-                }
-
-                amendedResource.taxonCount += 1
-            }
+            const columnIndices = COLUMNS.map(column => header.indexOf(column))
+            taxa[resourceId] = dwc.map(row => Object.fromEntries(columnIndices.map((index, i) => [COLUMNS[i], row[index]])))
 
             resourceIndex[amendedResource.id] = amendedResource
         }))
     }))
+
+    function getPairs (resource: ResourceId): Array<[Record<string, TaxonId[]>, string, TaxonId]> {
+        const pairs: Array<[Record<string, TaxonId[]>, string, TaxonId]> = []
+        const { includes = [] } = resourceIndex[resource]
+        const unusedIncludes = new Set(includes)
+
+        for (const taxon of taxa[resource]) {
+            if (taxon.gbifTaxonID) {
+                pairs.push([gbifIndex, taxon.gbifTaxonID, taxon.scientificNameID as string])
+                if (taxon.gbifAcceptedTaxonID && taxon.gbifAcceptedTaxonID !== taxon.gbifTaxonID) {
+                    pairs.push([gbifIndex, taxon.gbifAcceptedTaxonID, taxon.scientificNameID as string])
+                }
+            }
+
+            if (taxon.colTaxonID) {
+                pairs.push([colIndex, taxon.colTaxonID, taxon.scientificNameID as string])
+                if (taxon.colAcceptedTaxonID && taxon.colAcceptedTaxonID !== taxon.colTaxonID) {
+                    pairs.push([colIndex, taxon.colAcceptedTaxonID, taxon.scientificNameID as string])
+                }
+            }
+
+            const { continuesIn = [] } = JSON.parse(taxon.dynamicProperties || '{}')
+            for (const include of continuesIn) {
+                if (includes.includes(include)) {
+                    unusedIncludes.delete(include)
+
+                    for (const [index, indexId, taxonId] of getPairs(include)) {
+                        pairs.push([index, indexId, taxon.scientificNameID + '-' + taxonId])
+                    }
+                }
+            }
+        }
+
+        for (const include of unusedIncludes) {
+            for (const [index, indexId, taxonId] of getPairs(include)) {
+                pairs.push([index, indexId, resource + '-' + taxonId])
+            }
+        }
+
+        return pairs
+    }
+
+    for (const id in resourceIndex) {
+        for (const [index, indexId, taxonId] of getPairs(id)) {
+            addTaxon(index, indexId, taxonId)
+
+            resourceIndex[id].taxonCount++
+        }
+    }
 
     await Promise.all([
         fs.writeFile(path.join(REPO_ROOT, 'gbif.index.json'), JSON.stringify(sortObject(gbifIndex), null, 2)),
