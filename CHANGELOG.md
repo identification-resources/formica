@@ -1,3 +1,17 @@
+# [0.12.0](https://github.com/identification-resources/formica/compare/v0.11.1...v0.12.0) (2026-09-30)
+
+
+### Bug Fixes
+
+* **resources:** fix leaf taxa errors on last line of resource ([88d3a7d](https://github.com/identification-resources/formica/commit/88d3a7d5e11ffa5045c992616611272783b68d07))
+* **resources:** include identifiers if only the accepted taxon id is available ([a3c3e1e](https://github.com/identification-resources/formica/commit/a3c3e1e8095f6bc40f613b93052ddfedc90b1306))
+
+
+### Features
+
+* **resources:** add support for continues-in ([05bfd58](https://github.com/identification-resources/formica/commit/05bfd58cd9129f073d1cc982b0e50bd329271301))
+* **resources:** implement 'includes' ([bdd32c3](https://github.com/identification-resources/formica/commit/bdd32c3185d8f351d2343ad42a123ce9f65690c0))
+
 ## [0.11.1](https://github.com/identification-resources/formica/compare/v0.11.0...v0.11.1) (2026-09-14)
 
 
