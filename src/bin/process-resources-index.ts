@@ -74,16 +74,16 @@ async function main (args: string[]): Promise<void> {
         for (const taxon of taxa[resource]) {
             if (taxon.gbifTaxonID) {
                 pairs.push([gbifIndex, taxon.gbifTaxonID, taxon.scientificNameID as string])
-                if (taxon.gbifAcceptedTaxonID && taxon.gbifAcceptedTaxonID !== taxon.gbifTaxonID) {
-                    pairs.push([gbifIndex, taxon.gbifAcceptedTaxonID, taxon.scientificNameID as string])
-                }
+            }
+            if (taxon.gbifAcceptedTaxonID && taxon.gbifAcceptedTaxonID !== taxon.gbifTaxonID) {
+                pairs.push([gbifIndex, taxon.gbifAcceptedTaxonID, taxon.scientificNameID as string])
             }
 
             if (taxon.colTaxonID) {
                 pairs.push([colIndex, taxon.colTaxonID, taxon.scientificNameID as string])
-                if (taxon.colAcceptedTaxonID && taxon.colAcceptedTaxonID !== taxon.colTaxonID) {
-                    pairs.push([colIndex, taxon.colAcceptedTaxonID, taxon.scientificNameID as string])
-                }
+            }
+            if (taxon.colAcceptedTaxonID && taxon.colAcceptedTaxonID !== taxon.colTaxonID) {
+                pairs.push([colIndex, taxon.colAcceptedTaxonID, taxon.scientificNameID as string])
             }
 
             const { continuesIn = [] } = JSON.parse(taxon.dynamicProperties || '{}')
