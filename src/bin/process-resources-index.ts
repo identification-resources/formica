@@ -62,6 +62,8 @@ async function main (args: string[]): Promise<void> {
             const columnIndices = COLUMNS.map(column => header.indexOf(column))
             taxa[resourceId] = dwc.map(row => Object.fromEntries(columnIndices.map((index, i) => [COLUMNS[i], row[index]])))
 
+            amendedResource.taxonCount = taxa[resourceId].length
+
             resourceIndex[amendedResource.id] = amendedResource
         }))
     }))
@@ -110,8 +112,6 @@ async function main (args: string[]): Promise<void> {
     for (const id in resourceIndex) {
         for (const [index, indexId, taxonId] of getPairs(id)) {
             addTaxon(index, indexId, taxonId)
-
-            resourceIndex[id].taxonCount++
         }
     }
 
