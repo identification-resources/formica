@@ -1,3 +1,10 @@
+## [0.12.1](https://github.com/identification-resources/formica/compare/v0.12.0...v0.12.1) (2026-11-05)
+
+
+### Bug Fixes
+
+* **resources:** fix taxon counts ([cf79f2b](https://github.com/identification-resources/formica/commit/cf79f2b04be66e71a252b56751d20eb4fb7a654d))
+
 # [0.12.0](https://github.com/identification-resources/formica/compare/v0.11.1...v0.12.0) (2026-09-30)
 
 
