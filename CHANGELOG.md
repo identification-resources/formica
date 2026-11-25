@@ -1,3 +1,10 @@
+# [0.13.0](https://github.com/identification-resources/formica/compare/v0.12.1...v0.13.0) (2026-11-25)
+
+
+### Features
+
+* **catalog:** add script to generate catalog revision history ([d9cb613](https://github.com/identification-resources/formica/commit/d9cb613fb3e8e8c2b4ae401b7144d95338a1af73))
+
 ## [0.12.1](https://github.com/identification-resources/formica/compare/v0.12.0...v0.12.1) (2026-11-05)
 
 
